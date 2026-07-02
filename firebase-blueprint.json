@@ -1,0 +1,180 @@
+{
+  "entities": {
+    "CulturalAgent": {
+      "title": "Cultural Agent",
+      "description": "A cultural agent profile containing public and private information.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "socialName": { "type": "string" },
+        "cpf": { "type": "string" },
+        "type": { "type": "string", "enum": ["individual", "collective"] },
+        "description": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "areasOfActivity": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "address": { "type": "object" },
+        "contactInfo": { "type": "object" },
+        "socialLinks": { "type": "array" },
+        "images": { "type": "object" },
+        "videos": { "type": "array" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "birthDate": { "type": "string" },
+        "gender": { "type": "string" },
+        "raceColor": { "type": "string" },
+        "education": { "type": "string" },
+        "isSenior": { "type": "boolean" },
+        "disability": { "type": "boolean" },
+        "sexualOrientation": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "ownerId"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Private user information normally hidden from public view.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string" },
+        "privateEmail": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "privateEmail"]
+    },
+    "AppConfig": {
+      "title": "App Configuration",
+      "description": "Global settings for the application.",
+      "type": "object",
+      "properties": {
+        "adminEmails": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "CulturalSpace": {
+      "title": "Cultural Space",
+      "description": "A physical or virtual location for cultural activities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "shortDescription": { "type": "string" },
+        "accessibility": { "type": "string" },
+        "areasOfActivity": { "type": "array", "items": { "type": "string" } },
+        "address": { "type": "object" },
+        "images": { "type": "object" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "CulturalEvent": {
+      "title": "Cultural Event",
+      "description": "An event focused on cultural activities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "location": { "type": "string" },
+        "classification": { "type": "string" },
+        "entry": { "type": "string" },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "CulturalOpportunity": {
+      "title": "Cultural Opportunity",
+      "description": "Calls for projects, funding opportunities, or training.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["open", "closed", "future"] },
+        "description": { "type": "string" },
+        "areas": { "type": "array", "items": { "type": "string" } },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "CulturalProject": {
+      "title": "Cultural Project",
+      "description": "A cultural project or initiative.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "OpportunityRegistration": {
+      "title": "Opportunity Registration",
+      "description": "A user's application for a specific opportunity.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "opportunityId": { "type": "string" },
+        "userId": { "type": "string" },
+        "proponentType": { "type": "string" },
+        "status": { "type": "string" },
+        "registrationNumber": { "type": "string" },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "opportunityId", "userId", "status", "registrationNumber"]
+    }
+  },
+  "firestore": {
+    "agents/{agentId}": {
+      "schema": "CulturalAgent",
+      "description": "Collection of all cultural agents."
+    },
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Private sensitive user information."
+    },
+    "config/app": {
+      "schema": "AppConfig",
+      "description": "Global application configuration document."
+    },
+    "spaces/{spaceId}": {
+      "schema": "CulturalSpace",
+      "description": "Collection of cultural spaces."
+    },
+    "events/{eventId}": {
+      "schema": "CulturalEvent",
+      "description": "Collection of cultural events."
+    },
+    "opportunities/{opportunityId}": {
+      "schema": "CulturalOpportunity",
+      "description": "Collection of cultural opportunities."
+    },
+    "projects/{projectId}": {
+      "schema": "CulturalProject",
+      "description": "Collection of cultural projects."
+    },
+    "opportunity_registrations/{registrationId}": {
+      "schema": "OpportunityRegistration",
+      "description": "User applications for opportunities."
+    }
+  }
+}

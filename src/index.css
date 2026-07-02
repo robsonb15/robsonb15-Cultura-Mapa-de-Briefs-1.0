@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&family=Montserrat:wght@300;400;600;700;800;900&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --primary: #E30613;
+  --primary-hover: #C40510;
+  --secondary: #5A5A40;
+  --accent: #0070BA;
+  --body-bg: #FDFDFD;
+  --header-bg: #FFFFFF;
+  --footer-bg: #141414;
+  --text-primary: #1C1917;
+  --text-secondary: #78716C;
+  --nav-item-bg: #141414;
+  --nav-item-active: #0070BA;
+  --oportunidades: #E30613;
+  --eventos: #9B51E0;
+  --espacos: #4F9B1B;
+  --agentes: #F2994A;
+  --projetos: #0070BA;
+}
+
+@theme {
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Open Sans", "Montserrat", sans-serif;
+  --animate-spin-slow: spin 8s linear infinite;
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-body-bg: var(--body-bg);
+  --color-header-bg: var(--header-bg);
+  --color-footer-bg: var(--footer-bg);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-nav-item-bg: var(--nav-item-bg);
+  --color-nav-item-active: var(--nav-item-active);
+  
+  --color-cat-oportunidades: var(--oportunidades);
+  --color-cat-eventos: var(--eventos);
+  --color-cat-espacos: var(--espacos);
+  --color-cat-agentes: var(--agentes);
+  --color-cat-projetos: var(--projetos);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-white text-[#141414];
+  }
+}
+
+/* Fix Input Visibility */
+input, select, textarea {
+  @apply border border-stone-200 focus:border-[#5A5A40] focus:ring-1 focus:ring-[#5A5A40] transition-all bg-white text-[#141414];
+}
+
+/* Home Header Overlay */
+.home-header-overlay {
+  @apply absolute inset-0 bg-black/50 z-10 flex flex-col items-center justify-center text-center p-6;
+}
+
+/* Accessibility - High Contrast */
+.high-contrast body {
+  background-color: black !important;
+  color: white !important;
+}
+
+.high-contrast .bg-white,
+.high-contrast .bg-stone-50,
+.high-contrast .bg-[#f5f5f0],
+.high-contrast .bg-[#FDFDFD] {
+  background-color: black !important;
+}
+
+.high-contrast input, 
+.high-contrast select, 
+.high-contrast textarea {
+  background-color: black !important;
+  border-color: #fbbf24 !important;
+  color: #fbbf24 !important;
+}
+
+.high-contrast .text-stone-900,
+.high-contrast .text-stone-800,
+.high-contrast .text-stone-700,
+.high-contrast .text-stone-600,
+.high-contrast .text-stone-500,
+.high-contrast .text-[#141414] {
+  color: #fbbf24 !important; /* text-amber-400 */
+}
+
+.high-contrast .border,
+.high-contrast .border-stone-100,
+.high-contrast .border-stone-200 {
+  border-color: #fbbf24 !important;
+}
+
+/* Dark Mode Support */
+.dark body {
+  background-color: #0f0f0f;
+  color: #f3f4f6;
+}
+
+.dark input, 
+.dark select, 
+.dark textarea {
+  background-color: #1a1a1a !important;
+  border-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .bg-white {
+  background-color: #1a1a1a;
+}
+
+.dark .bg-stone-50 {
+  background-color: #121212;
+}
+
+.dark .bg-[#FDFDFD] {
+  background-color: #0f0f0f;
+}
+
+.dark .text-stone-900,
+.dark .text-[#141414] {
+  color: white !important;
+}
+
+.dark .text-stone-500,
+.dark .text-stone-400 {
+  color: #9ca3af !important; /* gray-400 */
+}
+
+.dark .border-stone-100,
+.dark .border-stone-200 {
+  border-color: #1f2937 !important; /* gray-800 */
+}
+
+.prose {
+    --tw-prose-body: #1c1917;
+    --tw-prose-headings: #0c0a09;
+    --tw-prose-links: #5A5A40;
+    --tw-prose-bold: #0c0a09;
+    --tw-prose-counters: #78716c;
+    --tw-prose-bullets: #d6d3d1;
+    --tw-prose-hr: #e7e5e4;
+    --tw-prose-quotes: #0c0a09;
+    --tw-prose-quote-borders: #e7e5e4;
+    --tw-prose-captions: #78716c;
+    --tw-prose-code: #0c0a09;
+    --tw-prose-pre-code: #e7e5e4;
+    --tw-prose-pre-bg: #1c1917;
+    --tw-prose-th-borders: #d6d3d1;
+    --tw-prose-td-borders: #e7e5e4;
+}

@@ -1,0 +1,203 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- HELPERS ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(data) {
+      return isSignedIn() && request.auth.uid == data.ownerId;
+    }
+
+    function isAdmin() {
+      let adminEmails = ['robsonstudio15hd@gmail.com', 'portalseculte@gmail.com'];
+      let isBootstrap = isSignedIn() && request.auth.token.email in adminEmails;
+      
+      return isBootstrap || (
+        isSignedIn() && 
+        exists(/databases/$(database)/documents/config/app) && 
+        request.auth.token.email in get(/databases/$(database)/documents/config/app).data.get('adminEmails', [])
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- VALIDATION HELPERS ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'fullName', 'privateEmail', 'miniBio', 'areas', 'acceptedTerms', 'createdAt', 'updatedAt']) &&
+             data.uid == request.auth.uid &&
+             data.fullName is string && data.fullName.size() >= 3 && data.fullName.size() <= 100 &&
+             data.privateEmail is string && data.privateEmail.size() <= 256 &&
+             data.miniBio is string && data.miniBio.size() <= 400 &&
+             data.areas is list && data.areas.size() <= 10 &&
+             data.acceptedTerms is map &&
+             data.acceptedTerms.get('terms', false) == true &&
+             data.acceptedTerms.get('privacy', false) == true &&
+             data.acceptedTerms.get('image', false) == true &&
+             data.createdAt == request.time &&
+             data.updatedAt == request.time &&
+             !data.get('isAdmin', false) &&
+             data.get('role', '') == '';
+    }
+
+    function isValidAgent(data) {
+      return data.keys().hasAll(['id', 'name', 'type', 'ownerId']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.type in ['individual', 'collective'] &&
+             // Limit sizes to prevent "Denial of Wallet"
+             data.get('description', '').size() <= 10000 &&
+             data.get('shortDescription', '').size() <= 500 &&
+             data.get('areasOfActivity', []).size() <= 20 &&
+             data.get('tags', []).size() <= 20 &&
+             data.get('videos', []).size() <= 10 &&
+             data.get('images', {}).get('gallery', []).size() <= 30 &&
+             // Typed check for added fields - using defaults to ensure we check against strings
+             (data.get('isSenior', false) is bool) &&
+             (data.get('disability', false) is bool) &&
+             (data.get('itinerantAgent', false) is bool);
+    }
+
+    // --- COLLECTIONS ---
+
+    match /agents/{agentId} {
+      // Anyone can see public profiles
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if isSignedIn() 
+                    && isValidId(agentId) 
+                    && agentId == request.auth.uid // Enforce 1:1 user-agent
+                    && isValidAgent(incoming())
+                    && incoming().ownerId == request.auth.uid
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+
+      allow update: if (isAdmin() || isOwner(existing()))
+                    && isValidAgent(incoming())
+                    && incoming().ownerId == existing().ownerId // Immutable owner
+                    && incoming().createdAt == existing().createdAt // Immutable creation time
+                    && incoming().updatedAt == request.time
+                    && (
+                      isAdmin() ||
+                      // Prevent non-admins from changing certain sensitive fields if necessary
+                      // or just ensure they follow the schema
+                      incoming().diff(existing()).affectedKeys().hasOnly([
+                        'name', 'socialName', 'cpf', 'type', 'description', 
+                        'shortDescription', 'areasOfActivity', 'tags', 'address', 
+                        'contactInfo', 'socialLinks', 'images', 'videos',
+                        'birthDate', 'gender', 'raceColor', 'education', 
+                        'disability', 'isSenior', 'sexualOrientation', 'updatedAt',
+                        'itinerantAgent', 'traditionalCommunities'
+                      ])
+                    );
+
+      allow delete: if isAdmin() || isOwner(existing());
+    }
+
+    match /config/app {
+      // Public needs to read logoUrl, etc.
+      allow read: if true;
+      // Only admins can change app config
+      allow write: if isAdmin();
+    }
+    
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin(); // Only admins can list users
+      allow create: if isSignedIn() && request.auth.uid == userId 
+                    && isValidUser(incoming());
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin())
+                    && (isAdmin() || (
+                      incoming().get('isAdmin', false) == existing().get('isAdmin', false) && // Prevent self-promotion
+                      incoming().get('role', '') == existing().get('role', '') && // Prevent role change
+                      incoming().updatedAt == request.time
+                    ));
+      allow delete: if isAdmin();
+    }
+
+    match /ai_usage/{logId} {
+      // Append-only for users, read-only for admins
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // --- GENERIC CONTENT RULES ---
+
+    function isValidContent(data) {
+      return data.keys().hasAll(['id', 'name', 'ownerId']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.ownerId is string &&
+             data.get('description', '').size() <= 10000 &&
+             data.get('shortDescription', '').size() <= 500 &&
+             data.get('location', '').size() <= 500;
+    }
+
+    match /spaces/{spaceId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(spaceId) && isValidContent(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if (isAdmin() || isOwner(existing())) && isValidContent(incoming()) && incoming().ownerId == existing().ownerId;
+      allow delete: if isAdmin() || isOwner(existing());
+    }
+
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(eventId) && isValidContent(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if (isAdmin() || isOwner(existing())) && isValidContent(incoming()) && incoming().ownerId == existing().ownerId;
+      allow delete: if isAdmin() || isOwner(existing());
+    }
+
+    match /opportunities/{opportunityId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(opportunityId) && isValidContent(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if (isAdmin() || isOwner(existing())) && isValidContent(incoming()) && incoming().ownerId == existing().ownerId;
+      allow delete: if isAdmin() || isOwner(existing());
+    }
+
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(projectId) && isValidContent(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if (isAdmin() || isOwner(existing())) && isValidContent(incoming()) && incoming().ownerId == existing().ownerId;
+      allow delete: if isAdmin() || isOwner(existing());
+    }
+
+    match /opportunity_registrations/{registrationId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isSignedIn() 
+                    && isValidId(registrationId) 
+                    && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == existing().userId || isAdmin());
+      allow delete: if isSignedIn() && (request.auth.uid == existing().userId || isAdmin());
+    }
+
+    match /interactions/{interactionId} {
+      allow read, write: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid) && (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+
+    match /report_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

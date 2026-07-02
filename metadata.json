@@ -1,0 +1,6 @@
+{
+  "name": "Mapa Cultural de Breves 1.0",
+  "description": "Sistema de mapeamento cultural operado pela Secretaria de Cultura, Turismo e Eventos de Breves (SECULTE), integrando agentes, espaços, eventos e oportunidades.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
