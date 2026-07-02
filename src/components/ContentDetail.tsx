@@ -201,14 +201,7 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
                          STATUS: {content.status === 'open' ? 'Inscrições Abertas' : 'Encerrado'}
                       </div>
                     )}
-                    <button 
-                      onClick={() => window.print()}
-                      className="p-3 bg-stone-50 text-stone-600 rounded-xl hover:bg-stone-900 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter"
-                      title="Imprimir Edital"
-                    >
-                      <Printer size={16} />
-                      Imprimir
-                    </button>
+
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

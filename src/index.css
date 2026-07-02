@@ -155,3 +155,140 @@ input, select, textarea {
     --tw-prose-th-borders: #d6d3d1;
     --tw-prose-td-borders: #e7e5e4;
 }
+
+/* Custom print utility classes */
+.print-only {
+  display: none !important;
+}
+
+/* Print Optimization for A4 - Only print registration info, hide maps and system layouts */
+@media print {
+  /* Reset background and basic configurations */
+  html, body, #root, main, .min-h-screen {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Hide absolutely everything on the web page */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show ONLY the .print-only component and all its children */
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+
+  /* Position the print-only container on the physical A4 paper */
+  .print-only {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: white !important;
+    color: #1c1917 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Force standard grids and flex elements inside the print layout */
+  .print-only .grid {
+    display: grid !important;
+  }
+  
+  .print-only .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  .print-only .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .print-only .gap-4 {
+    gap: 1rem !important;
+  }
+
+  .print-only .gap-6 {
+    gap: 1.5rem !important;
+  }
+
+  .print-only .gap-8 {
+    gap: 2rem !important;
+  }
+
+  .print-only .gap-12 {
+    gap: 3rem !important;
+  }
+
+  .print-only .flex {
+    display: flex !important;
+  }
+
+  .print-only .justify-between {
+    justify-content: space-between !important;
+  }
+
+  .print-only .items-end {
+    align-items: flex-end !important;
+  }
+
+  .print-only .flex-col {
+    flex-direction: column !important;
+  }
+
+  .print-only .items-end {
+    align-items: flex-end !important;
+  }
+
+  .print-only .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+  }
+
+  .print-only .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1.5rem !important;
+  }
+
+  .print-only .space-y-12 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 3rem !important;
+  }
+
+  /* Ensure nice borders and cards on sections in print format */
+  .print-only section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+    background-color: #fafaf9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-only table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-only th, .print-only td {
+    border-bottom: 1px solid #f5f5f4 !important;
+    padding: 8px 12px !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+}
+

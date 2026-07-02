@@ -14,14 +14,8 @@ export const RegistrationSummaryPDF = React.forwardRef<HTMLDivElement, Registrat
     return (
       <div 
         ref={ref} 
-        className="p-12 w-[800px] font-sans"
+        className="print-only p-8 font-sans w-full max-w-[800px] mx-auto bg-white text-stone-900"
         style={{ 
-          position: 'fixed', 
-          left: '-9999px', 
-          top: '-9999px', 
-          zIndex: -100, 
-          visibility: 'visible',
-          pointerEvents: 'none',
           backgroundColor: '#ffffff',
           color: '#1c1917'
         }}
@@ -29,7 +23,7 @@ export const RegistrationSummaryPDF = React.forwardRef<HTMLDivElement, Registrat
         <div className="pb-8 mb-12 flex justify-between items-end" style={{ borderBottom: '4px solid #1c1917' }}>
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-2" style={{ color: '#1c1917' }}>Comprovante de Inscrição</h1>
-            <p className="font-bold uppercase tracking-widest text-xs" style={{ color: '#78716c' }}>Mapa Cultural de Breves</p>
+            <p className="font-bold uppercase tracking-widest text-xs" style={{ color: '#78716c' }}>Mapa Cultural</p>
           </div>
           <div className="text-right flex flex-col items-end gap-2">
             <div>

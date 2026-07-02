@@ -160,64 +160,13 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
     setProjects(p as any);
   };
 
-  const generatePDF = async (reg: any) => {
+  const generatePDF = (reg: any) => {
     setIsGenerating(reg.id);
-    
-    // Tiny delay to ensure React has rendered the hidden component with current data
-    setTimeout(async () => {
-      if (!pdfRef.current) {
-        console.error("PDF Ref not found after delay");
-        setIsGenerating(null);
-        return;
-      }
-      try {
-        const canvas = await html2canvas(pdfRef.current!, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const imgProps = pdf.getImageProperties(imgData);
-        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        // First page
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-
-        // Subsequent pages
-        let pageCount = 1;
-        while (heightLeft > 0) {
-          position = - (pageCount * pdfHeight);
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdfHeight;
-          pageCount++;
-        }
-
-        pdf.autoPrint();
-        const url = pdf.output('bloburl');
-        const printWindow = window.open(url, '_blank');
-        
-        if (!printWindow) {
-          // Fallback if popup is blocked
-          pdf.save(`inscricao-${reg.registrationNumber}.pdf`);
-          alert("O PDF foi baixado automaticamente. Por favor, permita popups para abrir a tela de impressão direta.");
-        }
-      } catch (error) {
-        console.error("Error generating PDF:", error);
-        alert("Erro ao gerar PDF. Por favor, tente novamente.");
-      } finally {
-        setIsGenerating(null);
-      }
-    }, 800);
+    // Give a short delay to ensure React renders the RegistrationSummaryPDF element
+    setTimeout(() => {
+      window.print();
+      setIsGenerating(null);
+    }, 150);
   };
 
   const handleSaveContent = async (data: any, selectedType?: any) => {
@@ -302,9 +251,13 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
   ];
 
   if (trackingRegistration) {
+    const opp = opportunities.find(o => o.id === trackingRegistration.opportunityId);
+    const ag = agents.find(a => a.id === trackingRegistration.agentId);
     return (
       <RegistrationTracking 
         registration={trackingRegistration} 
+        opportunity={opp}
+        agent={ag}
         onBack={() => setTrackingRegistration(null)}
       />
     );
@@ -833,11 +786,7 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                            <div className="flex items-center gap-3">
                               <button 
                                 onClick={() => {
-                                  if (reg.pdfUrl) {
-                                    window.open(reg.pdfUrl, '_blank');
-                                  } else {
-                                    generatePDF(reg);
-                                  }
+                                  generatePDF(reg);
                                 }}
                                 disabled={isGenerating === reg.id}
                                 className="flex items-center gap-2 px-6 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-stone-800 transition-all shadow-sm group disabled:opacity-50"
@@ -1003,11 +952,7 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                            <div className="flex items-center gap-3">
                               <button 
                                 onClick={() => {
-                                  if (reg.pdfUrl) {
-                                    window.open(reg.pdfUrl, '_blank');
-                                  } else {
-                                    generatePDF(reg);
-                                  }
+                                  generatePDF(reg);
                                 }}
                                 disabled={isGenerating === reg.id}
                                 className="px-6 py-3 bg-[#141414] text-white rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"

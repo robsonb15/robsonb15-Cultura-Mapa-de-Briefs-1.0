@@ -150,10 +150,10 @@ export default function AdminPanel() {
         const data = configDoc.data() as AppConfig;
         if (!data.siteConfig) {
           data.siteConfig = {
-            siteName: 'Mapa Cultural de Breves',
+            siteName: 'Mapa Cultural',
             logoUrl: data.logoUrl || '',
-            heroTitle: 'Boas-vindas ao Mapa Cultural de Breves',
-            heroSubtitle: 'O Mapa Cultural de Breves é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.',
+            heroTitle: 'Boas-vindas ao Mapa Cultural',
+            heroSubtitle: 'O Mapa Cultural é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.',
             banners: [
               { id: '1', title: 'Política Nacional Aldir Blanc de Fomento à Cultura', subtitle: 'SAIBA MAIS!', url: '#', image: '', bgColor: 'bg-[#0070BA]', textColor: 'text-white' },
               { id: '2', title: 'Cultura & Sustentabilidade', subtitle: 'SAIBA MAIS!', url: '#', image: '', bgColor: 'bg-[#EEF4F9]', textColor: 'text-[#0070BA]' },
@@ -168,14 +168,14 @@ export default function AdminPanel() {
               phone: '',
               addressText: 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000',
               email: 'portalseculte@gmail.com',
-              copyrightText: '© 2026 MAPA CULTURAL DE BREVES • DESENVOLVIDO PARA A GESTÃO PÚBLICA'
+              copyrightText: '© 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA'
             }
           };
         }
         
         // Ensure new fields exist
-        if (data.siteConfig && (!data.siteConfig.footer.copyrightText || data.siteConfig.footer.copyrightText.includes('2024'))) {
-          data.siteConfig.footer.copyrightText = '© 2026 MAPA CULTURAL DE BREVES • DESENVOLVIDO PARA A GESTÃO PÚBLICA';
+        if (data.siteConfig && (!data.siteConfig.footer.copyrightText || data.siteConfig.footer.copyrightText.includes('2024') || data.siteConfig.footer.copyrightText.includes('BREVES'))) {
+          data.siteConfig.footer.copyrightText = '© 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA';
         }
         if (data.siteConfig && (!data.siteConfig.footer.instagram || data.siteConfig.footer.instagram === '')) {
           data.siteConfig.footer.instagram = 'https://www.instagram.com/seculteoficial/';
@@ -190,17 +190,17 @@ export default function AdminPanel() {
           data.siteConfig.footer.addressText = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
           data.siteConfig.footer.address = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
         }
-        if (data.siteConfig && !data.siteConfig.siteName) {
-          data.siteConfig.siteName = 'Mapa Cultural de Breves';
+        if (data.siteConfig && (!data.siteConfig.siteName || data.siteConfig.siteName.includes('Breves'))) {
+          data.siteConfig.siteName = 'Mapa Cultural';
         }
         if (data.siteConfig && data.siteConfig.logoScale === undefined) {
           data.siteConfig.logoScale = 1;
         }
-        if (data.siteConfig && !data.siteConfig.heroTitle) {
-          data.siteConfig.heroTitle = 'Boas-vindas ao Mapa Cultural de Breves';
+        if (data.siteConfig && (!data.siteConfig.heroTitle || data.siteConfig.heroTitle.includes('Breves'))) {
+          data.siteConfig.heroTitle = 'Boas-vindas ao Mapa Cultural';
         }
-        if (data.siteConfig && !data.siteConfig.heroSubtitle) {
-          data.siteConfig.heroSubtitle = 'O Mapa Cultural de Breves é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.';
+        if (data.siteConfig && (!data.siteConfig.heroSubtitle || data.siteConfig.heroSubtitle.includes('Breves'))) {
+          data.siteConfig.heroSubtitle = 'O Mapa Cultural é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.';
         }
         if (!data.siteConfig.themeColors) {
           data.siteConfig.themeColors = {
@@ -282,7 +282,7 @@ export default function AdminPanel() {
           logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
           adminEmails: ['robsonstudio15hd@gmail.com', 'portalseculte@gmail.com'],
           siteConfig: {
-            siteName: 'Mapa Cultural de Breves',
+            siteName: 'Mapa Cultural',
             logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
             heroBannerImage: 'https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg',
             featuredTitle: 'Em destaque',
@@ -301,7 +301,7 @@ export default function AdminPanel() {
               addressText: 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000',
               address: 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000',
               email: 'portalseculte@gmail.com',
-              copyrightText: '© 2026 MAPA CULTURAL DE BREVES • DESENVOLVIDO PARA A GESTÃO PÚBLICA'
+              copyrightText: '© 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA'
             },
             themeColors: {
               primary: '#E30613',
@@ -403,64 +403,13 @@ export default function AdminPanel() {
     }
   };
 
-  const generatePDF = async (reg: OpportunityRegistration) => {
+  const generatePDF = (reg: OpportunityRegistration) => {
     setIsGenerating(reg.id);
-    
-    // Tiny delay to ensure React has rendered the hidden component with current data
-    setTimeout(async () => {
-      if (!pdfRef.current) {
-        console.error("PDF Ref not found after delay");
-        setIsGenerating(null);
-        return;
-      }
-      try {
-        const canvas = await html2canvas(pdfRef.current!, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const imgProps = pdf.getImageProperties(imgData);
-        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        // First page
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-
-        // Subsequent pages
-        let pageCount = 1;
-        while (heightLeft > 0) {
-          position = - (pageCount * pdfHeight);
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdfHeight;
-          pageCount++;
-        }
-
-        pdf.autoPrint();
-        const url = pdf.output('bloburl');
-        const printWindow = window.open(url, '_blank');
-        
-        if (!printWindow) {
-          // Fallback if popup is blocked
-          pdf.save(`inscricao-${reg.registrationNumber}.pdf`);
-          alert("O PDF foi baixado automaticamente. Por favor, permita popups para abrir a tela de impressão direta.");
-        }
-      } catch (error) {
-        console.error("Error generating PDF:", error);
-        alert("Erro ao gerar PDF. Por favor, tente novamente.");
-      } finally {
-        setIsGenerating(null);
-      }
-    }, 800);
+    // Give a short delay to ensure React renders the RegistrationSummaryPDF element
+    setTimeout(() => {
+      window.print();
+      setIsGenerating(null);
+    }, 150);
   };
 
   const saveConfig = async (e: React.FormEvent) => {
@@ -620,7 +569,7 @@ export default function AdminPanel() {
           <h1 className="text-5xl font-black text-stone-900 tracking-tighter uppercase italic leading-none">
             Administração do Sistema
           </h1>
-          <p className="text-stone-400 font-medium text-sm mt-4">Gestão operacional do Mapa Cultural de Breves.</p>
+          <p className="text-stone-400 font-medium text-sm mt-4">Gestão operacional do Mapa Cultural.</p>
         </header>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -864,7 +813,12 @@ export default function AdminPanel() {
                             {/* Actions / Select for details */}
                             <div className="md:col-span-2 flex items-center justify-end gap-2 pt-4 md:pt-0">
                               <button 
-                                onClick={() => setSelectedPhaseIndex(idx)}
+                                onClick={() => {
+                                  setSelectedPhaseIndex(idx);
+                                  setTimeout(() => {
+                                    document.getElementById('fase-decisao-painel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  }, 100);
+                                }}
                                 type="button"
                                 className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                                   selectedPhaseIndex === idx 
@@ -916,7 +870,7 @@ export default function AdminPanel() {
                   </div>
 
                   {/* Right Column / Detail Box: Pareceres e Notas Técnicas da Fase selecionada */}
-                  <div className="xl:col-span-12 bg-stone-50/50 rounded-[2rem] p-8 border border-stone-100 space-y-6">
+                  <div id="fase-decisao-painel" className="xl:col-span-12 bg-stone-50/50 rounded-[2rem] p-8 border border-stone-100 space-y-6 scroll-mt-20">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-stone-100">
                       <div>
                         <span className="text-[9px] font-black text-[#0070BA] uppercase tracking-widest">Painel de Decisão da Etapa</span>
@@ -1219,7 +1173,7 @@ export default function AdminPanel() {
                       value={config?.siteConfig?.siteName || ''}
                       onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, siteName: e.target.value } }) : null)}
                       className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-stone-900 text-sm font-black outline-none focus:ring-2 focus:ring-stone-100"
-                      placeholder="Ex: Mapa Cultural de Breves"
+                      placeholder="Ex: Mapa Cultural"
                     />
                   </div>
                   <div className="space-y-4">
@@ -1330,7 +1284,7 @@ export default function AdminPanel() {
                           value={config?.siteConfig?.heroTitle || ''}
                           onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, heroTitle: e.target.value } }) : null)}
                           className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-stone-900 text-sm font-black outline-none"
-                          placeholder="Ex: Boas-vindas ao Mapa Cultural de Breves"
+                          placeholder="Ex: Boas-vindas ao Mapa Cultural"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1340,7 +1294,7 @@ export default function AdminPanel() {
                           onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, heroSubtitle: e.target.value } }) : null)}
                           rows={3}
                           className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-stone-900 text-xs font-medium outline-none resize-none"
-                          placeholder="Ex: O Mapa Cultural de Breves é..."
+                          placeholder="Ex: O Mapa Cultural é..."
                         />
                       </div>
                     </div>
@@ -1717,11 +1671,7 @@ export default function AdminPanel() {
                             <div className="flex items-center gap-3">
                                <button 
                                  onClick={() => {
-                                   if (reg.pdfUrl) {
-                                     window.open(reg.pdfUrl, '_blank');
-                                   } else {
-                                     generatePDF(reg);
-                                   }
+                                   generatePDF(reg);
                                  }}
                                  disabled={isGenerating === reg.id}
                                  className={`flex items-center gap-2 px-6 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-stone-800 transition-all shadow-xl disabled:opacity-50`}
@@ -2616,7 +2566,7 @@ export default function AdminPanel() {
                          value={config?.siteConfig?.footer.copyrightText}
                          onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, copyrightText: e.target.value } } }) : null)}
                          className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
-                         placeholder="Ex: © 2024 MAPA CULTURAL DE BREVES • DESENVOLVIDO PARA A GESTÃO PÚBLICA"
+                         placeholder="Ex: © 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA"
                        />
                     </div>
                  </div>

@@ -912,30 +912,7 @@ const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ onGoToMapping, onAg
         </motion.div>
       )}
 
-      {/* FOOTER ACTION */}
-      <div className="bg-stone-900 rounded-[40px] p-10 text-white relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-           <div className="space-y-4">
-              <h2 className="text-3xl font-black italic uppercase tracking-tighter">
-                {config?.reportsConfig?.footerTitle || 'Precisa de dados específicos?'}
-              </h2>
-              <p className="text-stone-400 text-sm max-w-md">
-                {config?.reportsConfig?.footerSubtitle || 'Nossa equipe pode gerar relatórios personalizados para pesquisadores e gestores culturais.'}
-              </p>
-           </div>
-           <button 
-             onClick={() => {
-               setIsRequestModalOpen(true);
-               setRequestSuccess(false);
-             }}
-             className="bg-white text-stone-900 px-8 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-[#0070BA] hover:text-white transition-all flex items-center gap-3 duration-305 shadow-md transform active:scale-95 hover:shadow-xl"
-           >
-             {config?.reportsConfig?.footerButtonLabel || 'Solicitar Relatório Completo'}
-             <ChevronRight size={18} />
-           </button>
-        </div>
-      </div>
+      {/* FOOTER ACTION REMOVED AS REQUESTED BY THE USER */}
 
       {/* REQUEST CUSTOM REPORT MODAL */}
       <AnimatePresence>

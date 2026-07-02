@@ -17,7 +17,8 @@ import {
   CloudUpload,
   Shield
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import ImageCropperModal from './ImageCropperModal';
 import { 
   CulturalSpace, 
   CulturalEvent, 
@@ -50,6 +51,8 @@ interface ContentEditFormProps {
 export default function ContentEditForm({ type, initialData, onSave, onCancel, isAdmin }: ContentEditFormProps) {
   const [contentType, setContentType] = useState<ContentType>(type);
   const [loading, setLoading] = useState(false);
+  const [pendingCropperSrc, setPendingCropperSrc] = useState<string | null>(null);
+  const [pendingCropperInfo, setPendingCropperInfo] = useState<{ file: File; field: 'imageUrl' | 'bannerUrl' } | null>(null);
   const [formData, setFormData] = useState<any>({
     name: '',
     description: '',
@@ -115,9 +118,50 @@ export default function ContentEditForm({ type, initialData, onSave, onCancel, i
     }
   };
 
+  const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const handleCropConfirm = async (croppedImageUrl: string) => {
+    if (!pendingCropperInfo) return;
+    const { field } = pendingCropperInfo;
+
+    setPendingCropperSrc(null);
+    setPendingCropperInfo(null);
+    setLoading(true);
+
+    try {
+      setFormData({ ...formData, [field]: croppedImageUrl });
+    } catch (error) {
+      console.error('Erro ao salvar imagem cortada:', error);
+      alert('Erro ao salvar imagem cortada.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'imageUrl' | 'bannerUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (field === 'bannerUrl') {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPendingCropperSrc(reader.result as string);
+        setPendingCropperInfo({ file, field });
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+      return;
+    }
 
     try {
       if (file.type.startsWith('image/')) {
@@ -777,6 +821,19 @@ export default function ContentEditForm({ type, initialData, onSave, onCancel, i
           </button>
         </div>
       </form>
+
+      <AnimatePresence>
+        {pendingCropperSrc && (
+          <ImageCropperModal
+            imageSrc={pendingCropperSrc}
+            onConfirm={handleCropConfirm}
+            onCancel={() => {
+              setPendingCropperSrc(null);
+              setPendingCropperInfo(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

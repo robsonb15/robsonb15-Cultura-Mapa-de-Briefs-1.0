@@ -280,32 +280,13 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
       alert(`Erro: Complete todos os campos obrigatórios antes de finalizar:\n\n- ${[...new Set(allMissing)].join('\n- ')}`);
       return;
     }
+
     setIsSubmitting(true);
     try {
-      let pdfUrl = registration?.pdfUrl;
-
-      // Generate PDF if it doesn't exist or we are finishing
-      if (pdfRef.current) {
-        const canvas = await html2canvas(pdfRef.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-        pdfUrl = pdf.output('datauristring');
-      }
-
       await onSave({
         opportunityId: opportunity.id,
         proponentType,
         status: 'submitted',
-        pdfUrl,
         data: formData as any,
       });
       // Clear draft after successful submission

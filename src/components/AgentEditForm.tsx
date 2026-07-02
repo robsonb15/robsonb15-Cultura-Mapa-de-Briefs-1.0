@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { CulturalAgent, AgentType } from '../types';
 import { uploadFile } from '../lib/storage-utils';
 import { sanitizeText } from '../lib/auth-utils';
+import ImageCropperModal from './ImageCropperModal';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -69,6 +70,8 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
   const [newVideo, setNewVideo] = useState('');
   const [newGalleryImg, setNewGalleryImg] = useState('');
   const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [pendingCropperSrc, setPendingCropperSrc] = useState<string | null>(null);
+  const [pendingCropperInfo, setPendingCropperInfo] = useState<{ file: File; path: string; type: 'banner' | 'profile' | 'gallery' } | null>(null);
 
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'searching' | 'success' | 'error'>('idle');
   const [geocodingError, setGeocodingError] = useState<string | null>(null);
@@ -270,18 +273,69 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
   const profileRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
+  const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const handleCropConfirm = async (croppedImageUrl: string) => {
+    if (!pendingCropperInfo) return;
+    const { file, path, type } = pendingCropperInfo;
+    
+    setPendingCropperSrc(null);
+    setPendingCropperInfo(null);
+    setIsUploading(type);
+    
+    try {
+      const croppedFile = dataURLtoFile(croppedImageUrl, file.name);
+      const url = await uploadFile(croppedFile, path);
+      setFormData(prev => {
+        const oldImages = prev.images || { gallery: [] };
+        if (type === 'banner') {
+          return { ...prev, images: { ...oldImages, banner: url } };
+        } else if (type === 'profile') {
+          return { ...prev, images: { ...oldImages, profile: url } };
+        } else {
+          return { ...prev, images: { ...oldImages, gallery: [...(oldImages.gallery || []), url] } };
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem cortada:', error);
+      alert('Erro ao fazer upload da imagem cortada.');
+    } finally {
+      setIsUploading(null);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, path: string, type: 'banner' | 'profile' | 'gallery') => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (type === 'banner') {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPendingCropperSrc(reader.result as string);
+        setPendingCropperInfo({ file, path, type });
+      };
+      reader.readAsDataURL(file);
+      // Reset file input value so same file can be uploaded again
+      e.target.value = '';
+      return;
+    }
 
     setIsUploading(type);
     try {
       const url = await uploadFile(file, path);
       setFormData(prev => {
         const oldImages = prev.images || { gallery: [] };
-        if (type === 'banner') {
-          return { ...prev, images: { ...oldImages, banner: url } };
-        } else if (type === 'profile') {
+        if (type === 'profile') {
           return { ...prev, images: { ...oldImages, profile: url } };
         } else {
           return { ...prev, images: { ...oldImages, gallery: [...(oldImages.gallery || []), url] } };
@@ -1226,6 +1280,19 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
           </footer>
         </form>
       </main>
+
+      <AnimatePresence>
+        {pendingCropperSrc && (
+          <ImageCropperModal
+            imageSrc={pendingCropperSrc}
+            onConfirm={handleCropConfirm}
+            onCancel={() => {
+              setPendingCropperSrc(null);
+              setPendingCropperInfo(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
