@@ -11,7 +11,6 @@ import {
   FileText,
   User,
   ExternalLink,
-  ChevronRight,
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -24,7 +23,6 @@ interface RegistrationTrackingProps {
 
 export default function RegistrationTracking({ registration, onBack }: RegistrationTrackingProps) {
   const [activeTab, setActiveTab] = useState<'tracking' | 'form'>('tracking');
-  const [selectedPhase, setSelectedPhase] = useState<RegistrationPhase | null>(null);
 
   // Default phases if none provided
   const phases: RegistrationPhase[] = registration.phases || [
@@ -40,40 +38,7 @@ export default function RegistrationTracking({ registration, onBack }: Registrat
       name: 'Etapa de Avaliação de Mérito Cultural', 
       startDate: '25/03/2025', 
       endDate: '10/04/2025', 
-      status: 'completed',
-      resultDescription: 'Não selecionada',
-      evaluations: [
-        {
-          reviewerId: 'rev1',
-          reviewerName: 'Parecerista #1',
-          score: 40,
-          totalPossible: 60,
-          comments: 'A proposta de publicação do livro VERSOS E POESIAS DOM JOSÉ LUIZ AZCONA é um livro de memória que mostra os 37 anos de episcopado de Dom Azcona...',
-          criteriaScores: [
-            { label: 'Qualidade do Projeto', score: 8, maxScore: 10 },
-            { label: 'Relevância da ação proposta', score: 7, maxScore: 10 },
-            { label: 'Aspectos de integração comunitária', score: 6, maxScore: 10 },
-            { label: 'Coerência da planilha orçamentária', score: 9, maxScore: 10 },
-            { label: 'Coerência do Plano de Divulgação', score: 5, maxScore: 10 },
-            { label: 'Trajetória artística e cultural', score: 5, maxScore: 10 },
-          ]
-        },
-        {
-          reviewerId: 'rev2',
-          reviewerName: 'Parecerista #2',
-          score: 40,
-          totalPossible: 60,
-          comments: 'Identificação: Vanderlei Lobato de Castro... O projeto possui relevância para a esfera educacional e cultural paraense...',
-          criteriaScores: [
-            { label: 'Qualidade do Projeto', score: 10, maxScore: 10 },
-            { label: 'Relevância da ação proposta', score: 10, maxScore: 10 },
-            { label: 'Aspectos de integração comunitária', score: 10, maxScore: 10 },
-            { label: 'Coerência da planilha orçamentária', score: 10, maxScore: 10 },
-            { label: 'Coerência do Plano de Divulgação', score: 10, maxScore: 10 },
-            { label: 'Trajetória artística e cultural', score: 5, maxScore: 10 },
-          ]
-        }
-      ]
+      status: 'pending'
     },
     { 
       id: '3', 
@@ -228,12 +193,6 @@ export default function RegistrationTracking({ registration, onBack }: Registrat
                                <div className="w-3 h-3 rounded-full bg-[#BF0B0B]" />
                                <span className="text-sm font-black text-stone-900 uppercase">{phase.resultDescription}</span>
                             </div>
-                            <button 
-                               onClick={() => setSelectedPhase(phase)}
-                               className="w-full flex items-center justify-center gap-2 bg-[#0070BA] text-white py-3 rounded-xl font-black uppercase text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
-                            >
-                               Exibir detalhamento
-                            </button>
                          </div>
                       </div>
                     )}
@@ -253,110 +212,6 @@ export default function RegistrationTracking({ registration, onBack }: Registrat
           </div>
         )}
       </div>
-
-      {/* Result Details Modal */}
-      <AnimatePresence>
-        {selectedPhase && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4\">
-            <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               onClick={() => setSelectedPhase(null)}
-               className="absolute inset-0 bg-stone-900/60 backdrop-blur-xl" 
-            />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] shadow-4xl relative z-10 flex flex-col overflow-hidden"
-            >
-              <div className="p-8 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-                 <div>
-                    <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter">{selectedPhase.name}</h3>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Inscrição: {registration.registrationNumber}</p>
-                 </div>
-                 <button 
-                   onClick={() => setSelectedPhase(null)}
-                   className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 shadow-lg border border-stone-100 transition-all"
-                 >
-                   <ChevronRight />
-                 </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-12 space-y-12">
-                 {/* Summary Scores */}
-                 <div className="bg-blue-50 border border-blue-100 rounded-[2rem] p-10 flex items-center justify-between">
-                    <div>
-                       <h4 className="text-xl font-black text-[#0070BA] uppercase tracking-tighter mb-1">Resultado Consolidado</h4>
-                       <p className="text-sm font-bold text-blue-400 uppercase tracking-widest">Média ponderada das avaliações</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="text-4xl font-black text-[#0070BA] tracking-tighter">40 <span className="text-lg text-blue-400">/ 60</span></p>
-                       <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mt-1">Pontos totais</p>
-                    </div>
-                 </div>
-
-                 {/* Evaluations List */}
-                 {selectedPhase.evaluations?.map((evalItem, idx) => (
-                   <div key={evalItem.reviewerId} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 0.2}s` }}>
-                      <div className="flex items-center justify-between border-b border-stone-100 pb-4">
-                         <div className="flex items-center gap-4\">
-                            <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center text-stone-400">
-                               <User size={20} />
-                            </div>
-                            <h5 className="text-lg font-black text-stone-900 uppercase tracking-tighter">{evalItem.reviewerName}</h5>
-                         </div>
-                         <p className="text-xl font-black text-stone-900 tracking-tighter">{evalItem.score} <span className="text-[10px] text-stone-400 uppercase">/ {evalItem.totalPossible} pts</span></p>
-                      </div>
-
-                      <div className="grid lg:grid-cols-2 gap-12">
-                         <div className="space-y-4">
-                            <p className="text-[10px] font-black text-stone-300 uppercase tracking-[0.2em]">PARECER TÉCNICO:</p>
-                            <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100 relative">
-                               <div className="absolute -left-1.5 top-8 w-3 h-3 bg-stone-50 border-l border-t border-stone-100 rotate-[-45deg]\" />
-                               <p className="text-xs leading-relaxed text-stone-600 font-medium whitespace-pre-wrap">{evalItem.comments}</p>
-                            </div>
-                         </div>
-
-                         <div className="space-y-4">
-                            <p className="text-[10px] font-black text-stone-300 uppercase tracking-[0.2em]">DETALHAMENTOS DE PONTUAÇÃO:</p>
-                            <div className="bg-white border border-stone-100 rounded-3xl p-8 space-y-6 shadow-sm">
-                               {evalItem.criteriaScores.map((criteria, cIdx) => (
-                                 <div key={cIdx} className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                       <span className="text-[10px] font-black text-stone-600 uppercase tracking-tight max-w-[70%]">{criteria.label}</span>
-                                       <span className="text-xs font-black text-[#0070BA]">{criteria.score}/{criteria.maxScore}</span>
-                                    </div>
-                                    <div className="h-1.5 bg-stone-50 rounded-full overflow-hidden">
-                                       <motion.div 
-                                          initial={{ width: 0 }}
-                                          animate={{ width: `${(criteria.score / criteria.maxScore) * 100}%` }}
-                                          transition={{ duration: 1, delay: 0.5 + (cIdx * 0.1) }}
-                                          className="h-full bg-[#0070BA] shadow-[0_0_8px_rgba(0,112,186,0.5)]" 
-                                       />
-                                    </div>
-                                 </div>
-                               ))}
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                 ))}
-              </div>
-
-              <div className="p-8 bg-stone-50/50 border-t border-stone-100 flex justify-end">
-                 <button 
-                   onClick={() => setSelectedPhase(null)}
-                   className="px-12 py-4 bg-stone-900 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl hover:scale-105 transition-all"
-                 >
-                   Fechar Visualização
-                 </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
