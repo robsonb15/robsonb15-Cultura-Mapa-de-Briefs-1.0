@@ -188,7 +188,16 @@ const GeoMapping: React.FC<GeoMappingProps> = ({ onBack, onAgentProfileClick }) 
     agentsList.forEach((agent: any, i) => {
       let lat = agent.address?.lat;
       let lng = agent.address?.lng;
-      if (!lat || !lng) {
+      
+      const addressStr = JSON.stringify(agent.address || {}).toLowerCase();
+      const agentNameLower = (agent.name || '').toLowerCase();
+      const isRioBranco = addressStr.includes('rio branco') || addressStr.includes('aeroporto') || agentNameLower.includes('teste');
+      const isFallbackCoords = !lat || !lng || (Math.abs(lat - (-1.681123)) < 0.005 && Math.abs(lng - (-50.480234)) < 0.005);
+
+      if (isRioBranco && isFallbackCoords) {
+        lat = -1.6891195;
+        lng = -50.4843378;
+      } else if (!lat || !lng) {
         const coords = getDeterministicCoords(agent.id, i);
         lat = coords.lat;
         lng = coords.lng;

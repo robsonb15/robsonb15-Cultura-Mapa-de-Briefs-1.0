@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CulturalAgent, AgentType } from '../types';
 import { generateAgentReport } from '../lib/pdf-utils';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
   MapPin, 
   Mail, 
@@ -80,6 +82,83 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImageIndex, selectedVideoIndex]);
 
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    let lat = agent.address?.lat || -1.6891195;
+    let lng = agent.address?.lng || -50.4843378;
+
+    // Smart override: if coordinates are old fallback, or if address contains "rio branco" / "aeroporto" or agent name contains "teste"
+    const addressStr = JSON.stringify(agent.address || {}).toLowerCase();
+    const agentNameLower = (agent.name || '').toLowerCase();
+    const isRioBranco = addressStr.includes('rio branco') || addressStr.includes('aeroporto') || agentNameLower.includes('teste');
+    const isOldFallback = (Math.abs(lat - (-1.681123)) < 0.005 && Math.abs(lng - (-50.480234)) < 0.005) || !agent.address?.lat;
+
+    if (isRioBranco && isOldFallback) {
+      lat = -1.6891195;
+      lng = -50.4843378;
+    }
+
+    if (!mapRef.current) {
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([lat, lng], 17);
+
+      const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      });
+
+      const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: 'Google Satellite'
+      });
+
+      // Default layer to Satellite (Camadas)
+      satellite.addTo(map);
+
+      // Add layer control
+      L.control.layers({
+        "Satélite (Camadas)": satellite,
+        "Mapa": streets
+      }, {}, { position: 'topright' }).addTo(map);
+
+      // Custom marker icon using the beautiful orange center pin styling
+      const markerHtml = `
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-8px, -8px);">
+          <div style="background-color: #E16238; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: white;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+          </div>
+          <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid white; margin-top: -1px;"></div>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: markerHtml,
+        className: 'profile-leaflet-marker',
+        iconSize: [34, 40],
+        iconAnchor: [17, 40]
+      });
+
+      L.marker([lat, lng], { icon: customIcon }).addTo(map);
+
+      mapRef.current = map;
+    } else {
+      mapRef.current.setView([lat, lng], 17);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [agent.address?.lat, agent.address?.lng, agent.name]);
+
   // Helper to get embed URL
   const getVideoEmbedUrl = (url: string) => {
     if (url.includes('youtube.com/watch?v=')) {
@@ -140,36 +219,6 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
     
     return "Avenida Rio Branco, nº 2022, Bairro Aeroporto, Breves, PA - CEP: 68800-000".toUpperCase();
   };
-
-  // Helper to generate Google Maps Embed URL
-  const getGoogleMapsEmbedUrl = (address: any) => {
-    if (address.mapUrl && address.mapUrl.includes('google.com/maps/embed')) {
-      return address.mapUrl;
-    }
-    
-    const hasCoords = address.lat && address.lng;
-    let query = '';
-    if (hasCoords) {
-      query = `${address.lat},${address.lng}`;
-    } else {
-      const parts: string[] = [];
-      if (address.street) parts.push(address.street);
-      if (address.number) parts.push(address.number);
-      if (address.neighborhood) parts.push(address.neighborhood);
-      parts.push("Breves, PA, Brasil");
-      if (address.zipCode) parts.push(address.zipCode);
-      query = encodeURIComponent(parts.join(', '));
-    }
-
-    const key = (import.meta.env.VITE_GOOGLE_MAPS_PLATFORM_KEY || '').trim();
-    if (key && key.startsWith('AIza')) {
-      return `https://www.google.com/maps/embed/v1/place?key=${key}&q=${query}&zoom=18`;
-    }
-    return `https://www.google.com/maps?q=${query}&output=embed`;
-  };
-
-  const mapEmbedUrl = getGoogleMapsEmbedUrl(agent.address);
-  const fallbackEmbedUrl = mapEmbedUrl;
 
   // Filter unique social links by platform to avoid duplications in UI
   const uniqueSocialLinks = agent.socialLinks?.reduce((acc: any[], current) => {
@@ -344,43 +393,21 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
                  {getFormattedAddress()}
                </p>
                
-               {/* Enhanced map container with Leaflet style overlay */}
+               {/* Enhanced map container with Real Leaflet Map */}
                <div className="h-[420px] w-full bg-[#FAF9F6] border border-stone-200 relative overflow-hidden rounded-md group">
-                 {/* Leaflet Zoom Control overlay mockup */}
-                 <div className="absolute top-4 left-4 z-10 flex flex-col bg-white border border-stone-300 rounded shadow-md divide-y divide-stone-250 select-none pointer-events-auto">
-                   <div className="w-8 h-8 flex items-center justify-center text-[18px] font-black text-stone-700 cursor-pointer hover:bg-stone-50" title="Como usar: arraste e use rolagem para zoom">+</div>
-                   <div className="w-8 h-8 flex items-center justify-center text-[18px] font-black text-stone-700 cursor-pointer hover:bg-stone-50" title="Como usar: arraste e use rolagem para zoom">-</div>
+                 {/* Leaflet Zoom Control overlay */}
+                 <div className="absolute top-4 left-4 z-[1000] flex flex-col bg-white border border-stone-300 rounded shadow-md divide-y divide-stone-250 select-none pointer-events-auto">
+                   <div className="w-8 h-8 flex items-center justify-center text-[18px] font-black text-stone-700 cursor-pointer hover:bg-stone-50" title="Aproximar" onClick={() => mapRef.current?.zoomIn()}>+</div>
+                   <div className="w-8 h-8 flex items-center justify-center text-[18px] font-black text-stone-700 cursor-pointer hover:bg-stone-50" title="Afastar" onClick={() => mapRef.current?.zoomOut()}>-</div>
                  </div>
 
-                 <iframe
-                   width="100%"
-                   height="100%"
-                   style={{ border: 0 }}
-                   loading="lazy"
-                   allowFullScreen
-                   referrerPolicy="no-referrer-when-downgrade"
-                   src={mapEmbedUrl}
-                   title={`Mapa de Localização de ${agent.name}`}
-                   className="contrast-[1.02]"
-                 ></iframe>
-
-                 {/* Custom Orange Center Pin Overlay (matching screenshot 'exemplo_2') */}
-                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[5]">
-                   <div className="relative flex flex-col items-center -translate-y-4">
-                     {/* Orange Circle with User Icon */}
-                     <div className="w-10 h-10 rounded-full bg-[#E16238] border-[3px] border-white flex items-center justify-center shadow-lg">
-                       <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-white fill-current">
-                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                       </svg>
-                     </div>
-                     {/* Tip/Arrow for the map pin */}
-                     <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white -mt-[1px] filter drop-shadow-[0_2px_1px_rgba(0,0,0,0.15)]" />
-                     <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[#E16238] -mt-[8px]" />
-                   </div>
-                 </div>
+                 <div
+                   ref={mapContainerRef}
+                   className="w-full h-full z-0"
+                 />
 
                  {/* Leaflet attribution watermark */}
-                 <div className="absolute bottom-1 right-1 bg-white/95 backdrop-blur px-2 py-0.5 text-[9px] font-bold text-stone-500 uppercase tracking-tighter select-none border border-stone-200/50 rounded pointer-events-none">
+                 <div className="absolute bottom-1 right-1 bg-white/95 backdrop-blur px-2 py-0.5 text-[9px] font-bold text-stone-500 uppercase tracking-tighter select-none border border-stone-200/50 rounded pointer-events-none z-[1000]">
                    Leaflet
                  </div>
                </div>

@@ -111,11 +111,26 @@ export default function AgentMap({ agents, onAgentClick, selectedAgentId, onView
         attributionControl: false
       }).setView([-1.6811, -50.4795], 14);
 
-      // Add elegant ultra-clean light map tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      // Define Street layer
+      const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd'
-      }).addTo(map);
+      });
+
+      // Define Satellite Hybrid layer
+      const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: 'Google Satellite'
+      });
+
+      // Add default layer
+      streets.addTo(map);
+
+      // Add layer control at the top-right
+      L.control.layers({
+        "Mapa": streets,
+        "Satélite (Camadas)": satellite
+      }, {}, { position: 'topright' }).addTo(map);
 
       // Add Zoom control at bottom left
       L.control.zoom({
