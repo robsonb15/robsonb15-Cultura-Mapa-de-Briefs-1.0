@@ -21,6 +21,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [iframeWarning, setIframeWarning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
@@ -34,15 +35,26 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
 
   const handleGoogleLogin = async () => {
     setError('');
+    setIframeWarning(false);
     setLoading(true);
     try {
       await loginWithGoogle();
       if (onBack) onBack();
     } catch (err: any) {
       console.error('Google login error captured:', err);
-      if (err.code === 'auth/unauthorized-domain') {
+      const errStr = String(err);
+      const isIframeErr = err.code === 'auth/cancelled-popup-request' || 
+                          err.code === 'auth/internal-error' || 
+                          errStr.includes('Pending promise') || 
+                          errStr.includes('cancelled-popup-request') ||
+                          errStr.includes('internal-error') ||
+                          window.self !== window.top;
+
+      if (isIframeErr) {
+        setIframeWarning(true);
+      } else if (err.code === 'auth/unauthorized-domain') {
         setError(
-          'Domínio Não Autorizado: Por favor, adicione "mapaculturalbreves.netlify.app" aos "Domínios Autorizados" nas configurações do Firebase Authentication no seu Console do Firebase.'
+          'Domínio Não Autorizado: Por favor, adicione o domínio atual aos "Domínios Autorizados" nas configurações do Firebase Authentication no seu Console do Firebase.'
         );
       } else if (err.code === 'auth/popup-closed-by-user') {
         setError('O login foi cancelado porque a janela de autenticação do Google foi fechada.');
@@ -260,6 +272,25 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
                         <LogIn size={12} /> Ir para Login
                       </button>
                     )}
+                  </div>
+                )}
+
+                {iframeWarning && (
+                  <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl space-y-3 text-stone-800 text-sm">
+                    <div className="flex gap-2 items-start text-amber-600 font-extrabold uppercase text-xs tracking-tight">
+                      <Info size={16} className="shrink-0 mt-0.5" />
+                      <span>Restrição de Navegador (IFrame)</span>
+                    </div>
+                    <p className="text-xs text-stone-600 leading-relaxed">
+                      Os navegadores modernos bloqueiam pop-ups do Google dentro de iframes (como o ambiente de testes do AI Studio) por motivos de segurança contra rastreamento.
+                    </p>
+                    <div className="bg-white/60 p-3 rounded-lg space-y-1.5 text-xs border border-amber-100">
+                      <p className="font-bold text-stone-700">Como resolver:</p>
+                      <ul className="list-disc list-inside space-y-1 text-stone-600">
+                        <li><strong>Abrir em nova aba:</strong> Clique no ícone de "Abrir em nova aba" no topo direito do painel de visualização do AI Studio para usar o login do Google normalmente.</li>
+                        <li><strong>E-mail e Senha:</strong> Se preferir, use o formulário tradicional ou crie uma conta com e-mail e senha no botão "Fazer cadastro" abaixo.</li>
+                      </ul>
+                    </div>
                   </div>
                 )}
 
