@@ -34,8 +34,10 @@ import {
   PlusCircle,
   Calendar,
   FilePieChart,
-  Download
+  Download,
+  HelpCircle
 } from 'lucide-react';
+import { HELP_CONTENT, PRIVACY_POLICY, IMAGE_AUTHORIZATION, TERMS_OF_USE } from '../constants/helpContent';
 import { AppConfig, CulturalAgent, OpportunityRegistration, CulturalOpportunity, ThemeColors, UserProfile } from '../types';
 import { contentService } from '../lib/contentService';
 import { compressImageToBase64 } from '../lib/storage-utils';
@@ -55,7 +57,8 @@ export default function AdminPanel() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'config' | 'agents' | 'registrations' | 'opportunities' | 'users' | 'banners' | 'categories' | 'stats' | 'reports' | 'footer' | 'colors' | 'acervo'>('config');
+  const [activeTab, setActiveTab] = useState<'config' | 'agents' | 'registrations' | 'opportunities' | 'users' | 'banners' | 'categories' | 'stats' | 'reports' | 'footer' | 'colors' | 'acervo' | 'help'>('config');
+  const [helpSubTab, setHelpSubTab] = useState<'faq' | 'terms' | 'privacy' | 'image'>('faq');
 
   const [editingAgent, setEditingAgent] = useState<CulturalAgent | null>(null);
   const [editingOpportunity, setEditingOpportunity] = useState<CulturalOpportunity | null>(null);
@@ -276,6 +279,15 @@ export default function AdminPanel() {
           };
         }
 
+        if (!data.helpConfig) {
+          data.helpConfig = {
+            faqCategories: HELP_CONTENT,
+            privacyPolicy: PRIVACY_POLICY,
+            termsOfUse: TERMS_OF_USE,
+            imageAuthorization: IMAGE_AUTHORIZATION
+          };
+        }
+
         setConfig(data);
       } else {
         const defaultConfig: AppConfig = {
@@ -367,6 +379,12 @@ export default function AdminPanel() {
               footerSubtitle: 'Nossa equipe pode gerar relatórios personalizados para pesquisadores e gestores culturais.',
               footerButtonLabel: 'Solicitar Relatório Completo'
             }
+          },
+          helpConfig: {
+            faqCategories: HELP_CONTENT,
+            privacyPolicy: PRIVACY_POLICY,
+            termsOfUse: TERMS_OF_USE,
+            imageAuthorization: IMAGE_AUTHORIZATION
           }
         };
         await setDoc(doc(db, 'config', 'app'), defaultConfig);
@@ -405,11 +423,21 @@ export default function AdminPanel() {
 
   const generatePDF = (reg: OpportunityRegistration) => {
     setIsGenerating(reg.id);
+    
+    const cleanup = () => {
+      setIsGenerating(null);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
     // Give a short delay to ensure React renders the RegistrationSummaryPDF element
     setTimeout(() => {
       window.print();
-      setIsGenerating(null);
-    }, 150);
+      // Safe fallback unmount after 2 seconds
+      setTimeout(() => {
+        setIsGenerating(null);
+      }, 2000);
+    }, 500);
   };
 
   const saveConfig = async (e: React.FormEvent) => {
@@ -658,6 +686,13 @@ export default function AdminPanel() {
             >
               <Shield size={20} />
               <span className="text-sm font-black uppercase tracking-wider">Rodapé & Social</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('help')}
+              className={`w-full text-left px-6 py-4 rounded-2xl flex items-center gap-3 transition-all ${activeTab === 'help' ? 'bg-[#141414] text-white shadow-xl translate-x-1' : 'text-stone-500 hover:bg-stone-100'}`}
+            >
+              <HelpCircle size={20} />
+              <span className="text-sm font-black uppercase tracking-wider">Ajuda & Privacidade</span>
             </button>
           </aside>
 
@@ -1729,51 +1764,239 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {activeTab === 'banners' && (
-              <form onSubmit={saveConfig} className="space-y-8">
-                <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 mb-8">
-                   <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Banner Principal (Fundo do Topo)</h3>
-                   <p className="text-xs text-stone-400 font-medium mb-8">A imagem que aparece atrás das boas-vindas.</p>
-                   
-                   <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="md:col-span-2 space-y-2">
-                          <label className="text-[10px] font-black uppercase text-stone-400">URL da Imagem de Fundo / Upload</label>
-                          <div className="flex gap-4">
-                            <input 
-                              placeholder="URL da imagem (ex: Unsplash)"
-                              value={config?.siteConfig?.heroBannerImage || ''}
-                              onChange={e => {
-                                setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroBannerImage: e.target.value } });
-                              }}
-                              className="flex-1 bg-white px-4 py-3 rounded-xl text-sm font-black outline-none border border-stone-100"
-                            />
-                            <div className="relative">
+            {activeTab === 'banners' && (() => {
+              const heroZoom = config?.siteConfig?.heroZoom !== undefined ? config.siteConfig.heroZoom : 100;
+              const heroPositionX = config?.siteConfig?.heroPositionX !== undefined ? config.siteConfig.heroPositionX : 50;
+              const heroPositionY = config?.siteConfig?.heroPositionY !== undefined ? config.siteConfig.heroPositionY : 50;
+
+              return (
+                <form onSubmit={saveConfig} className="space-y-8">
+                  <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 mb-8">
+                     <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Banner Principal (Fundo do Topo)</h3>
+                     <p className="text-xs text-stone-400 font-medium mb-8">A imagem que aparece atrás das boas-vindas. Ajuste a posição e o zoom em tempo real.</p>
+                     
+                     <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="md:col-span-2 space-y-2">
+                            <label className="text-[10px] font-black uppercase text-stone-400">URL da Imagem de Fundo / Upload</label>
+                            <div className="flex gap-4">
                               <input 
-                                type="file" 
-                                accept="image/*"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    try {
-                                      const base64 = await compressImageToBase64(file);
-                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroBannerImage: base64 } });
-                                    } catch (err) {
-                                      console.error("Erro ao comprimir imagem:", err);
+                                placeholder="URL da imagem (ex: Unsplash)"
+                                value={config?.siteConfig?.heroBannerImage || ''}
+                                onChange={e => {
+                                  setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroBannerImage: e.target.value } });
+                                }}
+                                className="flex-1 bg-white px-4 py-3 rounded-xl text-sm font-black outline-none border border-stone-100"
+                              />
+                              <div className="relative">
+                                <input 
+                                  type="file" 
+                                  accept="image/*"
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      try {
+                                        const base64 = await compressImageToBase64(file);
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroBannerImage: base64 } });
+                                      } catch (err) {
+                                        console.error("Erro ao comprimir imagem:", err);
+                                      }
                                     }
-                                  }
+                                  }}
+                                />
+                                <button type="button" className="h-full px-6 bg-[#5A5A40] text-white rounded-xl text-[10px] font-black uppercase flex items-center gap-2">
+                                  <Upload size={14} /> Upload
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Real-time Visualization & Adjustment Box */}
+                        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 border-t border-stone-100 pt-8">
+                          {/* Left: Interactive Preview */}
+                          <div className="lg:col-span-7 space-y-3">
+                            <span className="text-[10px] font-black uppercase text-stone-400 block">Visualização em Tempo Real (Banner)</span>
+                            <div className="relative h-[240px] w-full rounded-2xl overflow-hidden border border-stone-200 shadow-inner bg-stone-900 flex flex-col justify-end p-6">
+                              {/* Simulated Background */}
+                              <div 
+                                className="absolute inset-0 z-0 transition-all duration-200"
+                                style={{
+                                  backgroundImage: `url("${config?.siteConfig?.heroBannerImage || 'https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg'}")`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: `${heroPositionX}% ${heroPositionY}%`,
+                                  backgroundRepeat: 'no-repeat',
+                                  transform: `scale(${heroZoom / 100})`,
+                                  transformOrigin: 'center center'
                                 }}
                               />
-                              <button type="button" className="h-full px-6 bg-[#5A5A40] text-white rounded-xl text-[10px] font-black uppercase flex items-center gap-2">
-                                <Upload size={14} /> Upload
+                              {/* Ambient Overlay to simulate the production CSS */}
+                              <div className="absolute inset-0 bg-black/40 z-5" />
+                              <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-stone-950/20 to-transparent z-5" />
+
+                              {/* Simulated Welcome Text Overlay */}
+                              <div className="relative z-10 text-white text-left max-w-xs drop-shadow-lg">
+                                <h4 className="text-lg font-black leading-tight uppercase tracking-tight mb-1">
+                                  {config?.siteConfig?.heroTitle || 'Boas-vindas ao Mapa Cultural'}
+                                </h4>
+                                <p className="text-[10px] opacity-90 font-medium line-clamp-2">
+                                  {config?.siteConfig?.heroSubtitle || 'O Mapa Cultural é uma ferramenta de gestão cultural...'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right: Controls Panel */}
+                          <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+                            <div className="space-y-4">
+                              <span className="text-[10px] font-black uppercase text-stone-400 block mb-2">Painel de Ajustes</span>
+                              
+                              {/* Zoom Control */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-xs text-stone-600">
+                                  <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Zoom da Imagem</span>
+                                  <span className="font-mono font-black text-[#0070BA]">{heroZoom}%</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.max(50, heroZoom - 10);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroZoom: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                  >
+                                    -
+                                  </button>
+                                  <input 
+                                    type="range"
+                                    min="50"
+                                    max="300"
+                                    value={heroZoom}
+                                    onChange={e => {
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroZoom: parseInt(e.target.value) } });
+                                    }}
+                                    className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.min(300, heroZoom + 10);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroZoom: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* X Position (Lados) */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-xs text-stone-600">
+                                  <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Posicionamento Lateral (X)</span>
+                                  <span className="font-mono font-black text-[#0070BA]">{heroPositionX}%</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.max(0, heroPositionX - 5);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionX: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                  >
+                                    ◀
+                                  </button>
+                                  <input 
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={heroPositionX}
+                                    onChange={e => {
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionX: parseInt(e.target.value) } });
+                                    }}
+                                    className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.min(100, heroPositionX + 5);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionX: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                  >
+                                    ▶
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Y Position (Pra cima / Pra baixo) */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-xs text-stone-600">
+                                  <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Posicionamento Vertical (Y)</span>
+                                  <span className="font-mono font-black text-[#0070BA]">{heroPositionY}%</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.max(0, heroPositionY - 5);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionY: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                  >
+                                    ▲
+                                  </button>
+                                  <input 
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={heroPositionY}
+                                    onChange={e => {
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionY: parseInt(e.target.value) } });
+                                    }}
+                                    className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = Math.min(100, heroPositionY + 5);
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, heroPositionY: newVal } });
+                                    }}
+                                    className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                  >
+                                    ▼
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Reset controls button */}
+                            <div className="pt-2">
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setConfig({ 
+                                    ...config!, 
+                                    siteConfig: { 
+                                      ...config!.siteConfig!, 
+                                      heroZoom: 100, 
+                                      heroPositionX: 50, 
+                                      heroPositionY: 50 
+                                    } 
+                                  });
+                                }}
+                                className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Restaurar Padrão
                               </button>
                             </div>
                           </div>
                         </div>
-                      </div>
-                   </div>
-                </div>
+                     </div>
+                  </div>
 
                 <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 mb-8">
                    <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Pequenos Banners (Cards da Direita)</h3>
@@ -1864,7 +2087,7 @@ export default function AdminPanel() {
                    </button>
                 </div>
               </form>
-            )}
+            )})()}`
 
             {activeTab === 'categories' && (
               <form onSubmit={saveConfig} className="space-y-8">
@@ -1881,6 +2104,10 @@ export default function AdminPanel() {
                         imageUrl: '',
                         linkUrl: id
                       };
+
+                      const bannerZoom = banner.zoom !== undefined ? banner.zoom : 100;
+                      const bannerPositionX = banner.positionX !== undefined ? banner.positionX : 50;
+                      const bannerPositionY = banner.positionY !== undefined ? banner.positionY : 50;
 
                       return (
                         <div key={id} className="p-6 bg-stone-50 rounded-3xl border border-stone-100 space-y-6">
@@ -1900,7 +2127,7 @@ export default function AdminPanel() {
                                   else cats[idx].title = e.target.value;
                                   setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
                                 }}
-                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-black outline-none"
+                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-black outline-none border border-stone-100"
                               />
                             </div>
                             <div className="space-y-2">
@@ -1914,7 +2141,7 @@ export default function AdminPanel() {
                                   else cats[idx].linkUrl = e.target.value;
                                   setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
                                 }}
-                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-black outline-none"
+                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-black outline-none border border-stone-100"
                               />
                             </div>
                             <div className="md:col-span-2 space-y-2">
@@ -1929,7 +2156,7 @@ export default function AdminPanel() {
                                   else cats[idx].description = e.target.value;
                                   setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
                                 }}
-                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-medium outline-none resize-none"
+                                className="w-full bg-white px-4 py-3 rounded-xl text-sm font-medium outline-none resize-none border border-stone-100"
                               />
                             </div>
                             <div className="md:col-span-2 space-y-2">
@@ -1971,6 +2198,224 @@ export default function AdminPanel() {
                                     <Upload size={14} /> Upload
                                   </button>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Real-time Visualization & Adjustment Box for Categories Banners */}
+                          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 border-t border-stone-200/60 pt-6">
+                            {/* Left: Interactive Preview */}
+                            <div className="lg:col-span-7 space-y-3">
+                              <span className="text-[10px] font-black uppercase text-stone-400 block">Visualização em Tempo Real ({banner.title})</span>
+                              <div className="relative h-[160px] w-full rounded-2xl overflow-hidden border border-stone-200 shadow-inner bg-stone-950 flex items-center justify-start gap-4 px-6 md:px-10">
+                                {/* Simulated Background */}
+                                <div 
+                                  className="absolute inset-0 z-0 transition-all duration-200"
+                                  style={{
+                                    backgroundImage: `url("${banner.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2670&auto=format&fit=crop'}")`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: `${bannerPositionX}% ${bannerPositionY}%`,
+                                    backgroundRepeat: 'no-repeat',
+                                    transform: `scale(${bannerZoom / 100})`,
+                                    transformOrigin: 'center center'
+                                  }}
+                                />
+                                {/* Ambient Overlay to simulate the production CSS */}
+                                <div className="absolute inset-0 bg-black/25 z-5" />
+
+                                {/* Simulated Title overlay with same styling as CategoryBanners.tsx */}
+                                <div className="relative z-10 flex items-center gap-4 text-white">
+                                  <div className="w-12 h-12 rounded-full border border-white/20 bg-white/10 flex items-center justify-center shrink-0">
+                                    <ImageIcon size={20} />
+                                  </div>
+                                  <h3 className="text-xl font-black drop-shadow-2xl tracking-tighter uppercase italic">
+                                    {banner.title}
+                                  </h3>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right: Controls Panel */}
+                            <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+                              <div className="space-y-4">
+                                <span className="text-[10px] font-black uppercase text-stone-400 block">Ajustes da Imagem</span>
+                                
+                                {/* Zoom Control */}
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs text-stone-600">
+                                    <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Zoom</span>
+                                    <span className="font-mono font-black text-[#0070BA]">{bannerZoom}%</span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.max(50, bannerZoom - 10);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, zoom: newVal });
+                                        else cats[idx].zoom = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                    >
+                                      -
+                                    </button>
+                                    <input 
+                                      type="range"
+                                      min="50"
+                                      max="300"
+                                      value={bannerZoom}
+                                      onChange={e => {
+                                        const newVal = parseInt(e.target.value);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, zoom: newVal });
+                                        else cats[idx].zoom = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.min(300, bannerZoom + 10);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, zoom: newVal });
+                                        else cats[idx].zoom = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* X Position (Lados) */}
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs text-stone-600">
+                                    <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Posição Lateral (X)</span>
+                                    <span className="font-mono font-black text-[#0070BA]">{bannerPositionX}%</span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.max(0, bannerPositionX - 5);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionX: newVal });
+                                        else cats[idx].positionX = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                    >
+                                      ◀
+                                    </button>
+                                    <input 
+                                      type="range"
+                                      min="0"
+                                      max="100"
+                                      value={bannerPositionX}
+                                      onChange={e => {
+                                        const newVal = parseInt(e.target.value);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionX: newVal });
+                                        else cats[idx].positionX = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.min(100, bannerPositionX + 5);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionX: newVal });
+                                        else cats[idx].positionX = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                    >
+                                      ▶
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Y Position (Pra cima / Pra baixo) */}
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs text-stone-600">
+                                    <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Posição Vertical (Y)</span>
+                                    <span className="font-mono font-black text-[#0070BA]">{bannerPositionY}%</span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.max(0, bannerPositionY - 5);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionY: newVal });
+                                        else cats[idx].positionY = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                    >
+                                      ▲
+                                    </button>
+                                    <input 
+                                      type="range"
+                                      min="0"
+                                      max="100"
+                                      value={bannerPositionY}
+                                      onChange={e => {
+                                        const newVal = parseInt(e.target.value);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionY: newVal });
+                                        else cats[idx].positionY = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newVal = Math.min(100, bannerPositionY + 5);
+                                        const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                        const idx = cats.findIndex(b => b.id === id);
+                                        if (idx === -1) cats.push({ ...banner, positionY: newVal });
+                                        else cats[idx].positionY = newVal;
+                                        setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                      }}
+                                      className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                    >
+                                      ▼
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Reset button */}
+                              <div className="pt-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const cats = [...(config?.siteConfig?.categoryBanners || [])];
+                                    const idx = cats.findIndex(b => b.id === id);
+                                    const resetBanner = { ...banner, zoom: 100, positionX: 50, positionY: 50 };
+                                    if (idx === -1) cats.push(resetBanner);
+                                    else cats[idx] = resetBanner;
+                                    setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, categoryBanners: cats } });
+                                  }}
+                                  className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                >
+                                  Restaurar Padrão
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -2560,21 +3005,411 @@ export default function AdminPanel() {
                          className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
                        />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
-                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Copyright (Texto do Rodapé)</label>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Título do Rodapé (ex: SECULTE)</label>
                        <input 
-                         value={config?.siteConfig?.footer.copyrightText}
-                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, copyrightText: e.target.value } } }) : null)}
+                         value={config?.siteConfig?.footer.footerTitle || ''}
+                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, footerTitle: e.target.value } } }) : null)}
                          className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
-                         placeholder="Ex: © 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA"
+                         placeholder="Ex: SECULTE"
                        />
                     </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Subtítulo do Rodapé</label>
+                       <input 
+                         value={config?.siteConfig?.footer.footerSubtitle || ''}
+                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, footerSubtitle: e.target.value } } }) : null)}
+                         className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
+                         placeholder="Ex: Secretaria de Cultura, Turismo e Eventos"
+                       />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">URL da Logo do Rodapé</label>
+                       <input 
+                         value={config?.siteConfig?.footer.footerLogoUrl || ''}
+                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, footerLogoUrl: e.target.value } } }) : null)}
+                         className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
+                         placeholder="Ex: https://i.postimg.cc/L6F2L3yw/logo-breves.png"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Texto do Rodapé Centralizado Esquerdo</label>
+                       <input 
+                         value={config?.siteConfig?.footer.systemTitle || ''}
+                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, systemTitle: e.target.value } } }) : null)}
+                         className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
+                         placeholder="Ex: SISTEMA INTEGRATIVO"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Texto do Rodapé Centralizado Direito</label>
+                       <input 
+                         value={config?.siteConfig?.footer.systemSubtitle || ''}
+                         onChange={e => setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, footer: { ...prev.siteConfig!.footer, systemSubtitle: e.target.value } } }) : null)}
+                         className="w-full bg-stone-50 px-5 py-3 rounded-2xl text-sm outline-none"
+                         placeholder="Ex: BREVES - PARÁ"
+                       />
+                    </div>
+                    {/* Copyright field removed from editing form as requested */}
                  </div>
 
                  <button type="submit" className="mt-4 px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2">
                    <Save size={16} /> Salvar Rodapé
                  </button>
               </form>
+            )}
+
+            {activeTab === 'help' && (
+              <div className="space-y-8">
+                {/* Sub-tabs header */}
+                <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-stone-100 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setHelpSubTab('faq')}
+                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      helpSubTab === 'faq'
+                        ? 'bg-[#0070BA] text-white shadow-lg shadow-[#0070BA]/20'
+                        : 'bg-stone-50 text-stone-400 hover:text-stone-900 border border-stone-100'
+                    }`}
+                  >
+                    Dúvidas Frequentes (FAQ)
+                  </button>
+                  <button
+                    onClick={() => setHelpSubTab('terms')}
+                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      helpSubTab === 'terms'
+                        ? 'bg-[#0070BA] text-white shadow-lg shadow-[#0070BA]/20'
+                        : 'bg-stone-50 text-stone-400 hover:text-stone-900 border border-stone-100'
+                    }`}
+                  >
+                    Termos de Uso
+                  </button>
+                  <button
+                    onClick={() => setHelpSubTab('privacy')}
+                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      helpSubTab === 'privacy'
+                        ? 'bg-[#0070BA] text-white shadow-lg shadow-[#0070BA]/20'
+                        : 'bg-stone-50 text-stone-400 hover:text-stone-900 border border-stone-100'
+                    }`}
+                  >
+                    Política de Privacidade
+                  </button>
+                  <button
+                    onClick={() => setHelpSubTab('image')}
+                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      helpSubTab === 'image'
+                        ? 'bg-[#0070BA] text-white shadow-lg shadow-[#0070BA]/20'
+                        : 'bg-stone-50 text-stone-400 hover:text-stone-900 border border-stone-100'
+                    }`}
+                  >
+                    Autorização de Uso de Imagem
+                  </button>
+                </div>
+
+                {/* FAQ Content Panel */}
+                {helpSubTab === 'faq' && (
+                  <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 space-y-8">
+                    <div>
+                      <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Edição de Dúvidas Frequentes (FAQ)</h3>
+                      <p className="text-xs text-stone-400 font-medium mb-6">Cadastre, edite ou remova categorias e tópicos de ajuda.</p>
+                    </div>
+
+                    <div className="space-y-8">
+                      {config?.helpConfig?.faqCategories?.map((category, catIdx) => (
+                        <div key={catIdx} className="bg-stone-50 rounded-3xl p-6 md:p-8 border border-stone-100 relative space-y-6">
+                          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                            <div className="w-full md:w-1/2 space-y-2">
+                              <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Título da Categoria #{catIdx + 1}</label>
+                              <input
+                                type="text"
+                                value={category.title || ''}
+                                onChange={(e) => {
+                                  const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                  updatedCats[catIdx] = { ...updatedCats[catIdx], title: e.target.value };
+                                  setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                                }}
+                                className="w-full bg-white border border-stone-100 px-5 py-3 rounded-2xl text-sm font-bold outline-none shadow-sm"
+                                placeholder="Ex: 1 - Cadastro no Mapa Cultural"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedCats = (config?.helpConfig?.faqCategories || []).filter((_, idx) => idx !== catIdx);
+                                setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                              }}
+                              className="text-red-500 hover:text-red-700 text-xs font-black uppercase tracking-wider flex items-center gap-1 mt-2 md:mt-0"
+                            >
+                              <Trash2 size={14} /> Excluir Categoria
+                            </button>
+                          </div>
+
+                          {/* Topics List */}
+                          <div className="space-y-4 pl-0 md:pl-6 border-l-2 border-stone-200">
+                            <h4 className="text-[10px] font-black uppercase text-stone-400 tracking-wider">Perguntas e Respostas desta categoria</h4>
+                            
+                            {(category.topics || []).map((topic, topIdx) => (
+                              <div key={topIdx} className="bg-white rounded-2xl p-5 border border-stone-100 shadow-sm relative space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[10px] font-black uppercase text-[#0070BA] tracking-wider">Pergunta #{topIdx + 1}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                      const updatedTopics = (updatedCats[catIdx].topics || []).filter((_, idx) => idx !== topIdx);
+                                      updatedCats[catIdx] = { ...updatedCats[catIdx], topics: updatedTopics };
+                                      setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
+                                  >
+                                    <Trash2 size={12} /> Excluir Pergunta
+                                  </button>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Pergunta</label>
+                                  <input
+                                    type="text"
+                                    value={topic.title || ''}
+                                    onChange={(e) => {
+                                      const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                      const updatedTopics = [...(updatedCats[catIdx].topics || [])];
+                                      updatedTopics[topIdx] = { ...updatedTopics[topIdx], title: e.target.value };
+                                      updatedCats[catIdx] = { ...updatedCats[catIdx], topics: updatedTopics };
+                                      setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                                    }}
+                                    className="w-full bg-stone-50 px-4 py-3 rounded-xl text-sm outline-none"
+                                    placeholder="Ex: Como faço para atualizar as informações do meu perfil?"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Resposta / Conteúdo</label>
+                                  <textarea
+                                    value={topic.content || ''}
+                                    onChange={(e) => {
+                                      const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                      const updatedTopics = [...(updatedCats[catIdx].topics || [])];
+                                      updatedTopics[topIdx] = { ...updatedTopics[topIdx], content: e.target.value };
+                                      updatedCats[catIdx] = { ...updatedCats[catIdx], topics: updatedTopics };
+                                      setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                                    }}
+                                    rows={4}
+                                    className="w-full bg-stone-50 px-4 py-3 rounded-xl text-sm outline-none resize-none whitespace-pre-wrap"
+                                    placeholder="Explique detalhadamente as instruções..."
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Tags (separadas por vírgula)</label>
+                                  <input
+                                    type="text"
+                                    value={(topic.tags || []).join(', ')}
+                                    onChange={(e) => {
+                                      const tagsArray = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+                                      const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                      const updatedTopics = [...(updatedCats[catIdx].topics || [])];
+                                      updatedTopics[topIdx] = { ...updatedTopics[topIdx], tags: tagsArray };
+                                      updatedCats[catIdx] = { ...updatedCats[catIdx], topics: updatedTopics };
+                                      setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                                    }}
+                                    className="w-full bg-stone-50 px-4 py-3 rounded-xl text-xs outline-none"
+                                    placeholder="Ex: cadastro, perfil, dados"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedCats = [...(config?.helpConfig?.faqCategories || [])];
+                                const updatedTopics = [...(updatedCats[catIdx].topics || []), { title: 'Nova Pergunta', content: 'Insira a resposta aqui...', tags: [] }];
+                                updatedCats[catIdx] = { ...updatedCats[catIdx], topics: updatedTopics };
+                                setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                              }}
+                              className="w-full py-4 border-2 border-dashed border-stone-200 hover:border-[#0070BA] rounded-2xl flex items-center justify-center gap-2 text-stone-400 hover:text-[#0070BA] text-xs font-black uppercase tracking-wider transition-colors"
+                            >
+                              <PlusCircle size={16} /> Adicionar Nova Pergunta
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedCats = [...(config?.helpConfig?.faqCategories || []), { title: 'Nova Categoria', topics: [] }];
+                          setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, faqCategories: updatedCats } }) : null);
+                        }}
+                        className="w-full py-5 border-2 border-dashed border-stone-300 hover:border-stone-900 rounded-3xl flex items-center justify-center gap-2 text-stone-500 hover:text-stone-900 text-xs font-black uppercase tracking-wider transition-colors"
+                      >
+                        <PlusCircle size={18} /> Adicionar Nova Categoria de FAQ
+                      </button>
+                    </div>
+
+                    <div className="flex gap-4 pt-4 border-t border-stone-100">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const updatedPayload = {
+                              ...config,
+                              helpConfig: {
+                                ...config!.helpConfig!,
+                                faqCategories: config!.helpConfig!.faqCategories
+                              },
+                              updatedAt: serverTimestamp()
+                            };
+                            await updateDoc(doc(db, 'config', 'app'), updatedPayload as any);
+                            setStatus({ type: 'success', message: 'Perguntas frequentes salvas com sucesso!' });
+                            setTimeout(() => setStatus(null), 3000);
+                          } catch (err) {
+                            setStatus({ type: 'error', message: 'Erro ao salvar perguntas frequentes.' });
+                          }
+                        }}
+                        className="px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2 shadow-lg hover:bg-stone-800 transition-all"
+                      >
+                        <Save size={16} /> Salvar FAQs
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Terms Content Panel */}
+                {helpSubTab === 'terms' && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const updatedPayload = {
+                          ...config,
+                          helpConfig: {
+                            ...config!.helpConfig!,
+                            termsOfUse: config!.helpConfig!.termsOfUse
+                          },
+                          updatedAt: serverTimestamp()
+                        };
+                        await updateDoc(doc(db, 'config', 'app'), updatedPayload as any);
+                        setStatus({ type: 'success', message: 'Termos de Uso salvos com sucesso!' });
+                        setTimeout(() => setStatus(null), 3000);
+                      } catch (err) {
+                        setStatus({ type: 'error', message: 'Erro ao salvar Termos de Uso.' });
+                      }
+                    }}
+                    className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 space-y-8"
+                  >
+                    <div>
+                      <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Edição de Termos de Uso</h3>
+                      <p className="text-xs text-stone-400 font-medium mb-6">Personalize as regras e termos de utilização do Mapa Cultural.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Termos de Uso (Texto Completo)</label>
+                      <textarea
+                        value={config?.helpConfig?.termsOfUse || ''}
+                        onChange={(e) => setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, termsOfUse: e.target.value } }) : null)}
+                        rows={20}
+                        className="w-full bg-stone-50 px-5 py-4 rounded-2xl text-sm font-medium outline-none resize-none font-sans"
+                        placeholder="Insira o texto dos termos de uso..."
+                      />
+                    </div>
+
+                    <button type="submit" className="px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2 shadow-lg hover:bg-stone-800 transition-all">
+                      <Save size={16} /> Salvar Termos de Uso
+                    </button>
+                  </form>
+                )}
+
+                {/* Privacy Content Panel */}
+                {helpSubTab === 'privacy' && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const updatedPayload = {
+                          ...config,
+                          helpConfig: {
+                            ...config!.helpConfig!,
+                            privacyPolicy: config!.helpConfig!.privacyPolicy
+                          },
+                          updatedAt: serverTimestamp()
+                        };
+                        await updateDoc(doc(db, 'config', 'app'), updatedPayload as any);
+                        setStatus({ type: 'success', message: 'Política de Privacidade salva com sucesso!' });
+                        setTimeout(() => setStatus(null), 3000);
+                      } catch (err) {
+                        setStatus({ type: 'error', message: 'Erro ao salvar política de privacidade.' });
+                      }
+                    }}
+                    className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 space-y-8"
+                  >
+                    <div>
+                      <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Edição de Política de Privacidade</h3>
+                      <p className="text-xs text-stone-400 font-medium mb-6">Personalize o tratamento, direitos e responsabilidades com os dados pessoais.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Política de Privacidade (Texto Completo)</label>
+                      <textarea
+                        value={config?.helpConfig?.privacyPolicy || ''}
+                        onChange={(e) => setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, privacyPolicy: e.target.value } }) : null)}
+                        rows={20}
+                        className="w-full bg-stone-50 px-5 py-4 rounded-2xl text-sm font-medium outline-none resize-none font-sans"
+                        placeholder="Insira o texto da política de privacidade..."
+                      />
+                    </div>
+
+                    <button type="submit" className="px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2 shadow-lg hover:bg-stone-800 transition-all">
+                      <Save size={16} /> Salvar Política de Privacidade
+                    </button>
+                  </form>
+                )}
+
+                {/* Image Authorization Content Panel */}
+                {helpSubTab === 'image' && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const updatedPayload = {
+                          ...config,
+                          helpConfig: {
+                            ...config!.helpConfig!,
+                            imageAuthorization: config!.helpConfig!.imageAuthorization
+                          },
+                          updatedAt: serverTimestamp()
+                        };
+                        await updateDoc(doc(db, 'config', 'app'), updatedPayload as any);
+                        setStatus({ type: 'success', message: 'Autorização de Uso de Imagem salva com sucesso!' });
+                        setTimeout(() => setStatus(null), 3000);
+                      } catch (err) {
+                        setStatus({ type: 'error', message: 'Erro ao salvar Autorização de Uso de Imagem.' });
+                      }
+                    }}
+                    className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-stone-100 space-y-8"
+                  >
+                    <div>
+                      <h3 className="text-xl font-black text-stone-900 uppercase mb-2">Edição de Autorização de Uso de Imagem</h3>
+                      <p className="text-xs text-stone-400 font-medium mb-6">Personalize os termos e condições de cessão e veiculação de imagem, áudio e vídeo.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-stone-400 pl-1">Autorização de Imagem (Texto Completo)</label>
+                      <textarea
+                        value={config?.helpConfig?.imageAuthorization || ''}
+                        onChange={(e) => setConfig(prev => prev ? ({ ...prev, helpConfig: { ...prev.helpConfig!, imageAuthorization: e.target.value } }) : null)}
+                        rows={20}
+                        className="w-full bg-stone-50 px-5 py-4 rounded-2xl text-sm font-medium outline-none resize-none font-sans"
+                        placeholder="Insira o texto da autorização de imagem..."
+                      />
+                    </div>
+
+                    <button type="submit" className="px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2 shadow-lg hover:bg-stone-800 transition-all">
+                      <Save size={16} /> Salvar Autorização de Imagem
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
           </main>
         </div>

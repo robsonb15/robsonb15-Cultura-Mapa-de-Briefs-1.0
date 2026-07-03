@@ -10,9 +10,23 @@ interface HeroBannerProps {
   heroTitle?: string;
   heroSubtitle?: string;
   heroUrl?: string;
+  heroZoom?: number;
+  heroPositionX?: number;
+  heroPositionY?: number;
 }
 
-export default function HeroBanner({ onDiscover, onRegister, onOpportunities, config, heroImage, heroTitle, heroSubtitle }: HeroBannerProps) {
+export default function HeroBanner({ 
+  onDiscover, 
+  onRegister, 
+  onOpportunities, 
+  config, 
+  heroImage, 
+  heroTitle, 
+  heroSubtitle,
+  heroZoom,
+  heroPositionX,
+  heroPositionY
+}: HeroBannerProps) {
   const defaultBanners = [
     { id: '1', title: 'Caderno de Orientações da Lei Paulo Gustavo', subtitle: 'CLIQUE AQUI', url: '#', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=2669&auto=format&fit=crop', bgColor: 'bg-[#2D45B3]', textColor: 'text-white' },
     { id: '2', title: 'Cultura, sustentabilidade e Mudanças Climáticas', subtitle: 'DAS IDEIAS À AÇÃO', url: '#', image: '', bgColor: 'bg-[#E5E9D6]', textColor: 'text-[#1F4125]' },
@@ -21,21 +35,29 @@ export default function HeroBanner({ onDiscover, onRegister, onOpportunities, co
 
   const bannersToRender = (config && config.length > 0) ? config : defaultBanners;
   const backgroundImage = heroImage || "https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg";
-  const title = heroTitle || "Boas-vindas ao Mapa Cultural de Breves";
-  const subtitle = heroSubtitle || "O Mapa Cultural de Breves é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.";
+  const title = heroTitle || "Boas-vindas ao Mapa Cultural";
+  const subtitle = heroSubtitle || "O Mapa Cultural é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.";
+
+  const zoom = heroZoom !== undefined ? heroZoom : 100;
+  const posX = heroPositionX !== undefined ? heroPositionX : 50;
+  const posY = heroPositionY !== undefined ? heroPositionY : 50;
 
   return (
     <section className="relative min-h-[600px] md:h-[560px] w-full overflow-hidden flex flex-col">
       {/* Background with Ambient Image */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={{ 
-          backgroundImage: `url("${backgroundImage}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <div 
+          className="w-full h-full bg-cover transition-all duration-200"
+          style={{ 
+            backgroundImage: `url("${backgroundImage}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: `${posX}% ${posY}%`,
+            backgroundRepeat: 'no-repeat',
+            transform: `scale(${zoom / 100})`,
+            transformOrigin: 'center center'
+          }}
+        />
+      </div>
 
       <div className="relative z-10 h-full max-w-7xl mx-auto px-4 md:px-8 flex items-start pt-8 md:pt-24 text-white pb-16 md:pb-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">

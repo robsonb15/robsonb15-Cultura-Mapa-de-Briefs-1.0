@@ -244,6 +244,9 @@ function AppContent() {
               heroImage={appConfig?.siteConfig?.heroBannerImage}
               heroTitle={appConfig?.siteConfig?.heroTitle}
               heroSubtitle={appConfig?.siteConfig?.heroSubtitle}
+              heroZoom={appConfig?.siteConfig?.heroZoom}
+              heroPositionX={appConfig?.siteConfig?.heroPositionX}
+              heroPositionY={appConfig?.siteConfig?.heroPositionY}
               onDiscover={() => handleSetView('list')}
               onOpportunities={() => handleSetView('oportunidades')}
               onRegister={() => handleSetView(user ? 'edit' : 'auth')}
@@ -322,7 +325,7 @@ function AppContent() {
         return isAdmin ? <AdminPanel /> : null;
 
       case 'help':
-        return <HelpPage onBack={() => handleSetView('map')} />;
+        return <HelpPage onBack={() => handleSetView('map')} helpConfig={appConfig?.helpConfig} />;
 
       case 'espacos':
         return (
@@ -465,7 +468,7 @@ function AppContent() {
             <div className="bg-white dark:bg-stone-900 rounded-[3rem] p-16 text-center border border-stone-100 dark:border-stone-800 shadow-xl transition-colors">
               <h2 className="text-4xl font-black text-stone-900 dark:text-white uppercase italic mb-6">Guia de Acessibilidade</h2>
               <p className="text-stone-500 dark:text-stone-400 max-w-2xl mx-auto text-lg leading-relaxed mb-10">
-                O Mapa Cultural de Breves está comprometido com a inclusão. Esta seção traz ferramentas para facilitar sua navegação e orientações sobre acessibilidade.
+                O Mapa Cultural está comprometido com a inclusão. Esta seção traz ferramentas para facilitar sua navegação e orientações sobre acessibilidade.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">

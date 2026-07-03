@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, Search, ArrowLeft, Tag, Shield, FileText, Camera, HelpCircle } from 'lucide-react';
 import { HELP_CONTENT, PRIVACY_POLICY, IMAGE_AUTHORIZATION, TERMS_OF_USE } from '../constants/helpContent';
+import { HelpConfig } from '../types';
 
 interface HelpPageProps {
   onBack: () => void;
+  helpConfig?: HelpConfig;
 }
 
 type HelpSection = 'faq' | 'privacy' | 'terms' | 'image';
 
-export default function HelpPage({ onBack }: HelpPageProps) {
+export default function HelpPage({ onBack, helpConfig }: HelpPageProps) {
   const [activeSection, setActiveSection] = useState<HelpSection>('faq');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedTopics, setExpandedTopics] = useState<string[]>([]);
@@ -22,12 +24,17 @@ export default function HelpPage({ onBack }: HelpPageProps) {
     );
   };
 
-  const filteredFAQ = HELP_CONTENT.map(category => ({
+  const currentFAQ = helpConfig?.faqCategories || HELP_CONTENT;
+  const currentPrivacy = helpConfig?.privacyPolicy ?? PRIVACY_POLICY;
+  const currentTerms = helpConfig?.termsOfUse ?? TERMS_OF_USE;
+  const currentImage = helpConfig?.imageAuthorization ?? IMAGE_AUTHORIZATION;
+
+  const filteredFAQ = currentFAQ.map(category => ({
     ...category,
-    topics: category.topics.filter(topic => 
+    topics: (category.topics || []).filter(topic => 
       topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       topic.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topic.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      (topic.tags || []).some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     )
   })).filter(category => category.topics.length > 0);
 
@@ -58,7 +65,7 @@ export default function HelpPage({ onBack }: HelpPageProps) {
         {/* Hero */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black text-stone-900 uppercase tracking-tighter italic mb-4">Central de Ajuda</h2>
-          <p className="text-stone-400 font-medium max-w-xl mx-auto">Tudo o que você precisa saber sobre o Mapa Cultural de Breves.</p>
+          <p className="text-stone-400 font-medium max-w-xl mx-auto">Tudo o que você precisa saber sobre o Mapa Cultural.</p>
         </div>
 
         {/* Tabs */}
@@ -165,9 +172,9 @@ export default function HelpPage({ onBack }: HelpPageProps) {
               className="bg-white rounded-[2.5rem] border border-stone-100 p-8 md:p-16"
             >
               <div className="prose prose-stone max-w-none prose-h1:text-center prose-h1:font-black prose-h1:uppercase prose-h1:italic prose-h1:tracking-tighter prose-h1:mb-12 prose-headings:text-stone-900 prose-p:text-stone-600 prose-p:font-medium prose-p:leading-relaxed whitespace-pre-wrap">
-                {activeSection === 'privacy' && PRIVACY_POLICY}
-                {activeSection === 'image' && IMAGE_AUTHORIZATION}
-                {activeSection === 'terms' && TERMS_OF_USE}
+                {activeSection === 'privacy' && currentPrivacy}
+                {activeSection === 'image' && currentImage}
+                {activeSection === 'terms' && currentTerms}
               </div>
             </motion.div>
           )}

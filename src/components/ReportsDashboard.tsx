@@ -466,7 +466,7 @@ const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ onGoToMapping, onAg
         ...opportunity,
         entityType: 'opportunity',
         address: {
-          text: 'Edital / Oportunidade On-line - Mapa Cultural de Breves',
+          text: 'Edital / Oportunidade On-line - Mapa Cultural',
           lat: coords.lat,
           lng: coords.lng
         },
@@ -547,32 +547,32 @@ const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ onGoToMapping, onAg
     <div className="bg-white dark:bg-[#0f0f0f] w-full min-h-screen">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-12 bg-white dark:bg-[#0f0f0f]">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-stone-100">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-stone-900 dark:bg-stone-950 p-8 md:p-12 rounded-[2.5rem] text-white shadow-xl mb-8 border border-stone-800 dark:border-stone-800 print:bg-transparent print:text-stone-900 print:border-none print:p-0 print:shadow-none print:mb-4">
         <div className="space-y-2">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-2 print:hidden">
             <div className="w-10 h-10 bg-[#0070BA] rounded-2xl flex items-center justify-center text-white shadow-lg">
               <FilePieChart size={20} />
             </div>
-            <span className="text-[11px] font-black uppercase text-stone-400 tracking-widest bg-stone-50 px-3 py-1 rounded-full">
+            <span className="text-[11px] font-black uppercase text-white tracking-widest bg-[#0070BA] px-3 py-1 rounded-full">
               {config?.reportsConfig?.badgeText || 'Painel de Monitoramento'}
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-stone-900 tracking-tighter italic uppercase">
+          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase print:text-stone-900">
             {config?.reportsConfig?.title || 'Relatórios'}
           </h1>
-          <p className="text-stone-500 font-medium max-w-2xl text-sm md:text-base">
+          <p className="text-stone-300 font-medium max-w-2xl text-sm md:text-base print:text-stone-500">
             {config?.reportsConfig?.description || 'Acesse painéis de dados para visualizar gráficos e outras informações importantes para consulta e análise estratégica da cultura local.'}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 print:hidden">
            <button 
              onClick={handlePrint}
-             className="flex items-center gap-2 bg-stone-900 border-none hover:bg-stone-800 text-white px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all shadow-lg print:hidden"
+             className="flex items-center gap-2 bg-white border-none hover:bg-stone-100 text-stone-900 px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all shadow-lg"
            >
              <Download size={16} />
              Imprimir Relatórios
            </button>
-           <button className="flex items-center gap-2 bg-stone-50 hover:bg-stone-100 text-stone-600 px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all print:hidden">
+           <button className="flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-white border-none px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all">
              <Filter size={16} />
              {config?.reportsConfig?.filterLabel || 'Filtrar'}
            </button>

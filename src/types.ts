@@ -113,6 +113,11 @@ export interface FooterConfig {
   addressText: string;
   email: string;
   copyrightText?: string;
+  footerLogoUrl?: string;
+  footerTitle?: string;
+  footerSubtitle?: string;
+  systemTitle?: string;
+  systemSubtitle?: string;
 }
 
 export interface CategoryBanner {
@@ -122,6 +127,9 @@ export interface CategoryBanner {
   imageUrl: string;
   linkUrl: string;
   icon?: string;
+  zoom?: number;
+  positionX?: number;
+  positionY?: number;
 }
 
 export interface StatsConfig {
@@ -192,6 +200,9 @@ export interface SiteConfig {
   heroBannerUrl?: string;
   heroTitle?: string;
   heroSubtitle?: string;
+  heroZoom?: number;
+  heroPositionX?: number;
+  heroPositionY?: number;
   featuredTitle?: string;
   featuredDescription?: string;
   banners: BannerInfo[];
@@ -206,6 +217,25 @@ export interface AppConfig {
   logoUrl?: string;
   adminEmails?: string[];
   siteConfig?: SiteConfig;
+  helpConfig?: HelpConfig;
+}
+
+export interface HelpTopicConfig {
+  title: string;
+  content: string;
+  tags?: string[];
+}
+
+export interface HelpCategoryConfig {
+  title: string;
+  topics: HelpTopicConfig[];
+}
+
+export interface HelpConfig {
+  faqCategories?: HelpCategoryConfig[];
+  privacyPolicy?: string;
+  termsOfUse?: string;
+  imageAuthorization?: string;
 }
 
 export interface CulturalSpace {

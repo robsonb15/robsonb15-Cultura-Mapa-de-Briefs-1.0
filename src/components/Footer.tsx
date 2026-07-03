@@ -14,7 +14,11 @@ export default function Footer({ config, logoUrl, setView }: FooterProps) {
   const yt = config?.youtube || "#";
   const email = config?.email || "contato@mapaculturalbreves.pa.gov.br";
   const address = config?.addressText || "Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000";
-  const copyright = config?.copyrightText || "© 2024 MAPA CULTURAL DE BREVES • DESENVOLVIDO PARA A GESTÃO PÚBLICA";
+  const copyright = config?.copyrightText || "© 2026 MAPA CULTURAL • DESENVOLVIDO PARA A GESTÃO PÚBLICA";
+  
+  const footerLogo = config?.footerLogoUrl || logoUrl || "https://i.postimg.cc/L6F2L3yw/logo-breves.png";
+  const footerTitle = config?.footerTitle || "SECULTE";
+  const footerSubtitle = config?.footerSubtitle || "Secretaria de Cultura, Turismo e Eventos";
 
   const handleNav = (view: any) => {
     if (setView) setView(view);
@@ -86,11 +90,11 @@ export default function Footer({ config, logoUrl, setView }: FooterProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="md:col-span-2 space-y-8">
               <div className="flex items-center gap-4">
-                <img src={logoUrl || "https://i.postimg.cc/L6F2L3yw/logo-breves.png"} alt="Logo" className="h-20 md:h-24 brightness-0 invert" />
+                <img src={footerLogo} alt="Logo" className="h-20 md:h-24 brightness-0 invert" />
                 <div className="h-12 w-px bg-white/10 hidden md:block" />
                 <div>
-                  <h4 className="text-lg font-black uppercase tracking-tighter">SECULTE</h4>
-                  <p className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Secretaria de Cultura, Turismo e Eventos</p>
+                  <h4 className="text-lg font-black uppercase tracking-tighter">{footerTitle}</h4>
+                  <p className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{footerSubtitle}</p>
                 </div>
               </div>
               <p className="text-stone-400 text-sm leading-relaxed max-w-md">
@@ -149,9 +153,13 @@ export default function Footer({ config, logoUrl, setView }: FooterProps) {
                {copyright}
              </p>
              <div className="flex items-center gap-6">
-                <span className="text-[9px] font-black text-stone-500 uppercase tracking-tighter">SISTEMA INTEGRATIVO</span>
+                <span className="text-[9px] font-black text-stone-500 uppercase tracking-tighter">
+                  {config?.systemTitle || "SISTEMA INTEGRATIVO"}
+                </span>
                 <div className="w-px h-4 bg-white/10" />
-                <span className="text-[9px] font-black text-stone-500 uppercase tracking-tighter text-[#0070BA]">BREVES - PARÁ</span>
+                <span className="text-[9px] font-black text-stone-500 uppercase tracking-tighter text-[#0070BA]">
+                  {config?.systemSubtitle || "BREVES - PARÁ"}
+                </span>
              </div>
           </div>
         </div>

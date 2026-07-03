@@ -214,7 +214,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
             >
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-stone-900 mb-2">Entrar usuários</h1>
-                <p className="text-stone-500 text-sm">Acesse sua conta no Mapa Cultural de Breves</p>
+                <p className="text-stone-500 text-sm">Acesse sua conta no Mapa Cultural</p>
               </div>
 
               <form onSubmit={handleLogin} className="space-y-6">
@@ -419,7 +419,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
             >
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-stone-900 mb-2">Novo cadastro</h1>
-                <p className="text-stone-500 text-sm">Siga os passos para criar o seu cadastro no Mapa cultural de Breves.</p>
+                <p className="text-stone-500 text-sm">Siga os passos para criar o seu cadastro no Mapa cultural.</p>
               </div>
 
               <RegistrationProgress current={1} />
@@ -719,7 +719,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
               </div>
               <h1 className="text-3xl font-bold text-stone-900">Cadastro Realizado!</h1>
               <p className="text-stone-500 text-sm">
-                Pronto! Agora você faz parte da nossa comunidade e está preparado para iniciar a sua jornada no Mapa Cultural de Breves!
+                Pronto! Agora você faz parte da nossa comunidade e está preparado para iniciar a sua jornada no Mapa Cultural!
               </p>
               <button 
                 onClick={onBack}

@@ -106,11 +106,17 @@ export default function CategoryBanners({ banners, onSectionClick }: CategoryBan
             >
               {/* Left Side: Image with icon/overlay */}
               <div className="relative w-full md:w-[420px] h-[190px] md:h-[220px] shrink-0 overflow-hidden cursor-pointer" onClick={() => onSectionClick(banner.linkUrl)}>
-                <img 
-                  src={banner.imageUrl} 
-                  alt={banner.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                />
+                <div className="w-full h-full transition-transform duration-1000 group-hover:scale-105 overflow-hidden">
+                  <div 
+                    className="w-full h-full bg-cover transition-all duration-200"
+                    style={{ 
+                      backgroundImage: `url("${banner.imageUrl}")`,
+                      backgroundPosition: `${banner.positionX !== undefined ? banner.positionX : 50}% ${banner.positionY !== undefined ? banner.positionY : 50}%`,
+                      transform: `scale(${(banner.zoom !== undefined ? banner.zoom : 100) / 100})`,
+                      transformOrigin: 'center center'
+                    }}
+                  />
+                </div>
                 <div className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors" />
                 
                 <div className="absolute inset-0 flex items-center justify-start gap-4 px-6 md:px-10">

@@ -24,6 +24,7 @@ import { OpportunityRegistration, RegistrationPhase, RegistrationEvaluation } fr
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { RegistrationSummaryPDF } from './RegistrationSummaryPDF';
+import { EvaluationsPrintPDF } from './EvaluationsPrintPDF';
 
 interface RegistrationTrackingProps {
   registration: OpportunityRegistration;
@@ -155,8 +156,10 @@ export default function RegistrationTracking({ registration, opportunity, agent,
   const [activeTab, setActiveTab] = useState<'tracking' | 'form'>('tracking');
   const [selectedPhaseForDetails, setSelectedPhaseForDetails] = useState<RegistrationPhase | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isGeneratingEvaluations, setIsGeneratingEvaluations] = useState<boolean>(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const evalPdfRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (type: 'success' | 'error' | 'info', message: string) => {
     setToast({ type, message });
@@ -167,12 +170,42 @@ export default function RegistrationTracking({ registration, opportunity, agent,
     setIsGenerating(true);
     triggerToast('info', 'Preparando o comprovante de inscrição para impressão...');
     
+    const cleanup = () => {
+      setIsGenerating(false);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
     // Give a short delay to ensure React renders the RegistrationSummaryPDF element
     setTimeout(() => {
       window.print();
-      setIsGenerating(false);
+      // Safe fallback unmount after 2 seconds
+      setTimeout(() => {
+        setIsGenerating(false);
+      }, 2000);
       triggerToast('success', 'Documento enviado para a fila de impressão!');
-    }, 150);
+    }, 500);
+  };
+
+  const handlePrintEvaluations = () => {
+    setIsGeneratingEvaluations(true);
+    triggerToast('info', 'Preparando os pareceres técnicos para impressão...');
+    
+    const cleanup = () => {
+      setIsGeneratingEvaluations(false);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
+    // Give a short delay to ensure React renders the EvaluationsPrintPDF element
+    setTimeout(() => {
+      window.print();
+      // Safe fallback unmount after 2 seconds
+      setTimeout(() => {
+        setIsGeneratingEvaluations(false);
+      }, 2000);
+      triggerToast('success', 'Documento enviado para a fila de impressão!');
+    }, 500);
   };
 
   const handleExportPDF = async () => {
@@ -642,12 +675,21 @@ export default function RegistrationTracking({ registration, opportunity, agent,
                     Inscrição de Edital: {registration.registrationNumber} • Categoria: {registration.category || 'Não definida'}
                   </p>
                 </div>
-                <button
-                  onClick={() => setSelectedPhaseForDetails(null)}
-                  className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 shadow-md border border-stone-100 transition-all cursor-pointer shrink-0"
-                >
-                  <X size={20} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handlePrintEvaluations}
+                    className="flex items-center gap-2 bg-[#0070BA] hover:bg-[#005fa3] text-white px-5 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-wider shadow-md transition-all cursor-pointer whitespace-nowrap print:hidden"
+                  >
+                    <Printer size={14} />
+                    Imprimir Parecer
+                  </button>
+                  <button
+                    onClick={() => setSelectedPhaseForDetails(null)}
+                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 shadow-md border border-stone-100 transition-all cursor-pointer shrink-0 print:hidden"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Scrollable Body */}
@@ -791,6 +833,16 @@ export default function RegistrationTracking({ registration, opportunity, agent,
           registration={registration}
           opportunity={opportunity || { name: 'Edital Geral de Fomento' }}
           agent={agent || { name: registration.agentName }}
+        />
+      )}
+
+      {isGeneratingEvaluations && selectedPhaseForDetails && (
+        <EvaluationsPrintPDF
+          ref={evalPdfRef}
+          registration={registration}
+          opportunity={opportunity || { name: 'Edital Geral de Fomento' }}
+          agent={agent || { name: registration.agentName }}
+          phase={selectedPhaseForDetails}
         />
       )}
     </div>

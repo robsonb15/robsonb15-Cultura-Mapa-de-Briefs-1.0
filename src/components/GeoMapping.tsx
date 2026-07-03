@@ -271,7 +271,7 @@ const GeoMapping: React.FC<GeoMappingProps> = ({ onBack, onAgentProfileClick }) 
         ...opportunity,
         entityType: 'opportunity',
         address: {
-          text: 'Edital / Oportunidade On-line - Mapa Cultural de Breves',
+          text: 'Edital / Oportunidade On-line - Mapa Cultural',
           lat: coords.lat,
           lng: coords.lng
         },

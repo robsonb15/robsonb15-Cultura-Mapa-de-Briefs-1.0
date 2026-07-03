@@ -162,11 +162,21 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
 
   const generatePDF = (reg: any) => {
     setIsGenerating(reg.id);
+    
+    const cleanup = () => {
+      setIsGenerating(null);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
     // Give a short delay to ensure React renders the RegistrationSummaryPDF element
     setTimeout(() => {
       window.print();
-      setIsGenerating(null);
-    }, 150);
+      // Safe fallback unmount after 2 seconds
+      setTimeout(() => {
+        setIsGenerating(null);
+      }, 2000);
+    }, 500);
   };
 
   const handleSaveContent = async (data: any, selectedType?: any) => {

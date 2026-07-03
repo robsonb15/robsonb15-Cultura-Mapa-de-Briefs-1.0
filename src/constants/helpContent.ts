@@ -75,7 +75,7 @@ export const HELP_CONTENT: HelpCategory[] = [
       },
       {
         title: "Como saber se fui aprovado?",
-        content: "A divulgação dos resultados da oportunidade será divulgada no site da Prefeitura Municipal de Breves e rede social da secretaria. Fique atento à publicação da lista de selecionados.\n\nApós o período de recurso/diligência, os responsáveis pela oportunidade poderão disponibilizar a lista de selecionados na guia de Resultados na página do edital, na plataforma Mapa Cultural de Breves.",
+        content: "A divulgação dos resultados da oportunidade será divulgada no site da Prefeitura Municipal de Breves e rede social da secretaria. Fique atento à publicação da lista de selecionados.\n\nApós o período de recurso/diligência, os responsáveis pela oportunidade poderão disponibilizar a lista de selecionados na guia de Resultados na página do edital, na plataforma Mapa Cultural.",
         tags: ["edital", "oportunidade", "aprovado", "inscrição"]
       },
       {
@@ -103,7 +103,7 @@ export const HELP_CONTENT: HelpCategory[] = [
 ];
 
 export const PRIVACY_POLICY = `
-Quando você acessar o Mapa Cultural de Breves, estará fornecendo alguns dados pessoais com o objetivo de viabilizar a sua operação. A Secretaria de Cultura, Turismo e Eventos (SECULTE) preza pela segurança dos seus dados, pelo respeito à sua privacidade e pela transparência com você e, por isso, dedicamos este documento para explicar como os seus dados pessoais serão tratados pela SECULTE e quais são as medidas que aplicamos para mantê-los seguros.
+Quando você acessar o Mapa Cultural, estará fornecendo alguns dados pessoais com o objetivo de viabilizar a sua operação. A Secretaria de Cultura, Turismo e Eventos (SECULTE) preza pela segurança dos seus dados, pelo respeito à sua privacidade e pela transparência com você e, por isso, dedicamos este documento para explicar como os seus dados pessoais serão tratados pela SECULTE e quais são as medidas que aplicamos para mantê-los seguros.
 
 Este documento foi criado por nós, considerando as seguintes normas:
 - Lei nº 13.709, de 14 de agosto de 2018: dispõe sobre a proteção de dados pessoais (LGPD);
@@ -122,7 +122,7 @@ DEFINIÇÕES:
 - Encarregado: canal de comunicação entre o controlador, os titulares e a ANPD.
 
 QUAIS DADOS SÃO COLETADOS PELA SECULTE:
-Durante sua experiência no Mapa Cultural de Breves, coletamos:
+Durante sua experiência no Mapa Cultural, coletamos:
 - Dados cadastrais (Nome, CPF/CNPJ, Gênero, Raça, E-mail, Telefone, Município).
 - Dados de navegação (Endereço IP, Informações do dispositivo).
 - Dados sensíveis (Orientação sexual, raça ou gênero) para execução de políticas públicas e cumprimento de obrigações legais.
@@ -152,7 +152,7 @@ Dúvidas? Entre em contato pelo e-mail portalseculte@gmail.com.
 export const IMAGE_AUTHORIZATION = `
 Autorização de uso de imagem
 
-Autorizo, para todos os fins em direito admitidos, a publicização de minha imagem, áudio, fotografias e vídeos, na Plataforma Mapa Cultural de Breves. A autorização neste termo especificada é gratuita e irá perdurar enquanto meu cadastro estiver ativo no sistema. Por ser esta expressão de minha vontade, nada terei a reclamar a título de direitos conexos à minha imagem e áudio. Meu consentimento pode ser revogado a qualquer momento mediante manifestação expressa, por procedimento gratuito e facilitado, através do e-mail do Encarregado da SECULTE, localizado no canal de comunicação disponível na tela inicial da Plataforma.
+Autorizo, para todos os fins em direito admitidos, a publicização de minha imagem, áudio, fotografias e vídeos, na Plataforma Mapa Cultural. A autorização neste termo especificada é gratuita e irá perdurar enquanto meu cadastro estiver ativo no sistema. Por ser esta expressão de minha vontade, nada terei a reclamar a título de direitos conexos à minha imagem e áudio. Meu consentimento pode ser revogado a qualquer momento mediante manifestação expressa, por procedimento gratuito e facilitado, através do e-mail do Encarregado da SECULTE, localizado no canal de comunicação disponível na tela inicial da Plataforma.
 
 Versão atualizada em 13 de maio de 2026
 ÓRGÃO – SECULTE
@@ -161,7 +161,7 @@ Versão atualizada em 13 de maio de 2026
 export const TERMS_OF_USE = `
 Termos de Uso
 
-Ao utilizar o Mapa Cultural de Breves, você concorda com as seguintes diretrizes:
+Ao utilizar o Mapa Cultural, você concorda com as seguintes diretrizes:
 
 1. Responsabilidade do Cadastro
 O usuário é responsável pela veracidade das informações fornecidas e pela segurança de suas credenciais de acesso.

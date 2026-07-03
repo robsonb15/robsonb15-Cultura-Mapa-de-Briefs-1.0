@@ -51,6 +51,124 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
            date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const downloadFile = async (url: string, defaultName: string) => {
+    if (!url || url === '#' || url === '') return;
+
+    const sanitizeFilename = (name: string, contentType?: string) => {
+      let ext = '';
+      if (contentType) {
+        if (contentType.includes('pdf')) ext = '.pdf';
+        else if (contentType.includes('word') || contentType.includes('officedocument.wordprocessing')) ext = '.docx';
+        else if (contentType.includes('sheet') || contentType.includes('officedocument.spreadsheetml')) ext = '.xlsx';
+        else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+        else if (contentType.includes('png')) ext = '.png';
+        else if (contentType.includes('text/plain')) ext = '.txt';
+      }
+
+      let finalName = name;
+      const hasExt = name.includes('.') && name.lastIndexOf('.') > name.length - 6;
+      if (!hasExt && ext) {
+        finalName = `${name}${ext}`;
+      }
+      return finalName;
+    };
+
+    if (url.startsWith('blob:')) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = defaultName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
+    try {
+      // 1. Try to fetch the URL (handles data: URLs and CORS-enabled HTTP/HTTPS URLs natively)
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const finalName = sanitizeFilename(defaultName, blob.type || '');
+      
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = finalName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 150);
+    } catch (err) {
+      console.warn('Direct fetch download failed, using fallback:', err);
+      
+      // 2. Fallback for data URLs if native fetch failed
+      if (url.startsWith('data:')) {
+        try {
+          const parts = url.split(';base64,');
+          if (parts.length >= 2) {
+            let contentType = 'application/octet-stream';
+            const mimeMatch = parts[0].match(/^data:(.*?)(;|$)/);
+            if (mimeMatch && mimeMatch[1]) {
+              contentType = mimeMatch[1];
+            }
+
+            let base64Data = parts[1].trim().replace(/\s/g, '');
+            if (base64Data.includes('%')) {
+              base64Data = decodeURIComponent(base64Data);
+            }
+            
+            const paddingNeeded = (4 - (base64Data.length % 4)) % 4;
+            if (paddingNeeded > 0) {
+              base64Data += '='.repeat(paddingNeeded);
+            }
+
+            const raw = window.atob(base64Data);
+            const rawLength = raw.length;
+            const uInt8Array = new Uint8Array(rawLength);
+            for (let i = 0; i < rawLength; ++i) {
+              uInt8Array[i] = raw.charCodeAt(i);
+            }
+            
+            const blob = new Blob([uInt8Array], { type: contentType });
+            const blobUrl = URL.createObjectURL(blob);
+            const finalName = sanitizeFilename(defaultName, contentType);
+            
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = finalName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 150);
+            return;
+          }
+        } catch (manualErr) {
+          console.error('Manual base64 decode failed:', manualErr);
+        }
+      }
+
+      // 3. Third fallback for standard cross-origin URLs blocked by CORS
+      if (!url.startsWith('data:')) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = defaultName;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        console.error('Data URL could not be processed.');
+      }
+    }
+  };
+
   return (
     <div className="bg-white min-h-screen pb-20 font-sans">
       {/* Breadcrumbs */}
@@ -241,41 +359,52 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    {/* Model Files first for opportunities */}
-                   {type === 'opportunity' && content.modelFiles && Object.entries(content.modelFiles).map(([key, url]) => (
-                      url && (
-                        <a key={`model-${key}`} href={url as string} target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 p-6 bg-[#0070BA]/5 hover:bg-[#0070BA]/10 rounded-3xl border border-[#0070BA]/10 transition-all group shadow-sm">
+                   {type === 'opportunity' && content.modelFiles && Object.entries(content.modelFiles).map(([key, url]) => {
+                      if (!url) return null;
+                      const label = content.modelLabels?.[key] || (key === 'representation' ? 'Declaração de Representação' :
+                               key === 'noCnpj' ? 'Declaração Coletivo sem CNPJ' :
+                               key === 'ethnicRacial' ? 'Declaração Étnico Racial' :
+                               key === 'disability' ? 'Declaração de PCD' :
+                               key === 'report' ? 'Relatório de Execução' :
+                               key === 'form' ? 'Formulário de Recurso' :
+                               key === 'term' ? 'Termo de Execução' :
+                               key === 'plan' ? 'Plano de Trabalho' : key.toUpperCase());
+                      return (
+                        <button 
+                          key={`model-${key}`} 
+                          onClick={() => downloadFile(url as string, label)} 
+                          className="flex items-center text-left w-full gap-6 p-6 bg-[#0070BA]/5 hover:bg-[#0070BA]/10 rounded-3xl border border-[#0070BA]/10 transition-all group shadow-sm cursor-pointer"
+                        >
                            <div className="shrink-0 w-12 h-12 bg-[#0070BA] text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                               <Download size={24} />
                            </div>
                            <div className="flex-1 min-w-0">
                               <p className="text-xs font-black text-stone-900 uppercase tracking-tight truncate">
-                                {content.modelLabels?.[key] || (key === 'representation' ? 'Declaração de Representação' :
-                                 key === 'noCnpj' ? 'Declaração Coletivo sem CNPJ' :
-                                 key === 'ethnicRacial' ? 'Declaração Étnico Racial' :
-                                 key === 'disability' ? 'Declaração de PCD' :
-                                 key === 'report' ? 'Relatório de Execução' :
-                                 key === 'form' ? 'Formulário de Recurso' :
-                                 key === 'term' ? 'Termo de Execução' :
-                                 key === 'plan' ? 'Plano de Trabalho' : key.toUpperCase())}
+                                {label}
                               </p>
                               <p className="text-[9px] font-black text-[#0070BA] uppercase tracking-tighter mt-0.5">MODELO PARA DOWNLOAD</p>
                            </div>
-                        </a>
-                      )
-                   ))}
-                   {(content.files || [
-                     { name: `${content.name.toUpperCase().slice(0, 10)}-DOCS.PDF`, url: '#' },
-                   ]).map((file: any, i: number) => (
-                      <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 p-6 bg-stone-50 hover:bg-stone-100 rounded-3xl border border-stone-100 transition-all group shadow-sm">
-                         <div className="shrink-0 w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Download size={24} />
-                         </div>
-                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-black text-stone-900 uppercase tracking-tight truncate">{file.name}</p>
-                            <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter mt-0.5">ARQUIVO ADIICONAL</p>
-                         </div>
-                      </a>
-                   ))}
+                        </button>
+                      );
+                   })}
+                   {(content.files || []).map((file: any, i: number) => {
+                      if (!file || !file.url || file.url === '#') return null;
+                      return (
+                        <button 
+                          key={i} 
+                          onClick={() => downloadFile(file.url, file.name)} 
+                          className="flex items-center text-left w-full gap-6 p-6 bg-stone-50 hover:bg-stone-100 rounded-3xl border border-stone-100 transition-all group shadow-sm cursor-pointer"
+                        >
+                           <div className="shrink-0 w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Download size={24} />
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black text-stone-900 uppercase tracking-tight truncate">{file.name}</p>
+                              <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter mt-0.5">ARQUIVO ADICIONAL</p>
+                           </div>
+                        </button>
+                      );
+                   })}
                 </div>
              </section>
           </div>

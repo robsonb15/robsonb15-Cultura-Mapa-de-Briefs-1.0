@@ -365,17 +365,123 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
         </div>
  
         <div className="flex flex-col gap-4">
-          {modelUrl && (
-            <button 
-              onClick={() => {
-                window.open(modelUrl, '_blank');
-              }}
-              className="flex items-center gap-2 text-[#0070BA] font-black text-[12px] uppercase tracking-tight hover:underline w-fit"
-            >
-              <Download size={18} />
-              Baixar modelo
-            </button>
-          )}
+           {modelUrl && (
+             <button 
+               onClick={async () => {
+                 const name = currentLabel || 'modelo_anexo';
+                 
+                 const sanitizeFilename = (filename: string, contentType?: string) => {
+                   let ext = '';
+                   if (contentType) {
+                     if (contentType.includes('pdf')) ext = '.pdf';
+                     else if (contentType.includes('word') || contentType.includes('officedocument.wordprocessing')) ext = '.docx';
+                     else if (contentType.includes('sheet') || contentType.includes('officedocument.spreadsheetml')) ext = '.xlsx';
+                     else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+                     else if (contentType.includes('png')) ext = '.png';
+                     else if (contentType.includes('text/plain')) ext = '.txt';
+                   }
+
+                   let finalName = filename.toLowerCase().replace(/\s+/g, '_');
+                   const hasExt = finalName.includes('.') && finalName.lastIndexOf('.') > finalName.length - 6;
+                   if (!hasExt && ext) {
+                     finalName = `${finalName}${ext}`;
+                   } else if (!hasExt) {
+                     finalName = `${finalName}.bin`;
+                   }
+                   return finalName;
+                 };
+
+                 if (modelUrl.startsWith('blob:')) {
+                   const a = document.createElement('a');
+                   a.href = modelUrl;
+                   a.download = sanitizeFilename(name);
+                   document.body.appendChild(a);
+                   a.click();
+                   document.body.removeChild(a);
+                   return;
+                 }
+
+                 try {
+                   const response = await fetch(modelUrl);
+                   const blob = await response.blob();
+                   const blobUrl = URL.createObjectURL(blob);
+                   const finalName = sanitizeFilename(name, blob.type || '');
+                   
+                   const a = document.createElement('a');
+                   a.href = blobUrl;
+                   a.download = finalName;
+                   document.body.appendChild(a);
+                   a.click();
+                   document.body.removeChild(a);
+                   
+                   setTimeout(() => URL.revokeObjectURL(blobUrl), 150);
+                 } catch (err) {
+                   console.warn('Direct fetch download failed for model, using fallback:', err);
+                   
+                   if (modelUrl.startsWith('data:')) {
+                     try {
+                       const parts = modelUrl.split(';base64,');
+                       if (parts.length >= 2) {
+                         let contentType = 'application/octet-stream';
+                         const mimeMatch = parts[0].match(/^data:(.*?)(;|$)/);
+                         if (mimeMatch && mimeMatch[1]) {
+                           contentType = mimeMatch[1];
+                         }
+
+                         let base64Data = parts[1].trim().replace(/\s/g, '');
+                         if (base64Data.includes('%')) {
+                           base64Data = decodeURIComponent(base64Data);
+                         }
+                         
+                         const paddingNeeded = (4 - (base64Data.length % 4)) % 4;
+                         if (paddingNeeded > 0) {
+                           base64Data += '='.repeat(paddingNeeded);
+                         }
+
+                         const raw = window.atob(base64Data);
+                         const rawLength = raw.length;
+                         const uInt8Array = new Uint8Array(rawLength);
+                         for (let i = 0; i < rawLength; ++i) {
+                           uInt8Array[i] = raw.charCodeAt(i);
+                         }
+                         
+                         const blob = new Blob([uInt8Array], { type: contentType });
+                         const blobUrl = URL.createObjectURL(blob);
+                         const finalName = sanitizeFilename(name, contentType);
+                         
+                         const a = document.createElement('a');
+                         a.href = blobUrl;
+                         a.download = finalName;
+                         document.body.appendChild(a);
+                         a.click();
+                         document.body.removeChild(a);
+                         
+                         setTimeout(() => URL.revokeObjectURL(blobUrl), 150);
+                         return;
+                       }
+                     } catch (manualErr) {
+                       console.error('Manual base64 decode failed for model:', manualErr);
+                     }
+                   }
+
+                   if (!modelUrl.startsWith('data:')) {
+                     const a = document.createElement('a');
+                     a.href = modelUrl;
+                     a.download = sanitizeFilename(name);
+                     a.target = '_blank';
+                     a.rel = 'noopener noreferrer';
+                     document.body.appendChild(a);
+                     a.click();
+                     document.body.removeChild(a);
+                   }
+                 }
+               }}
+               className="flex items-center gap-2 text-[#0070BA] font-black text-[12px] uppercase tracking-tight hover:underline w-fit"
+             >
+               <Download size={18} />
+               Baixar modelo
+             </button>
+           )}
 
           {!fileName ? (
             <>

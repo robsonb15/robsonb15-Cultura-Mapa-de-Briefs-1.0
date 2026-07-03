@@ -174,9 +174,23 @@ input, select, textarea {
     height: auto !important;
   }
 
-  /* Hide absolutely everything on the web page */
-  body * {
+  /* Hide absolutely everything on the web page ONLY if print-only element exists on the page */
+  body:has(.print-only) {
     visibility: hidden !important;
+  }
+
+  /* Explicitly hide VLibras widgets and any of its components during printing */
+  [vw],
+  [vw] *,
+  .vw-plugin,
+  .vw-plugin *,
+  [vw-access-button],
+  .vp-container,
+  #vlibras-widget,
+  div[vw] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 
   /* Show ONLY the .print-only component and all its children */

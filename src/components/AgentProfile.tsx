@@ -183,7 +183,7 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
     if (navigator.share) {
       navigator.share({
         title: agent.name,
-        text: `Confira o perfil de ${agent.name} no Mapa Cultural de Breves`,
+        text: `Confira o perfil de ${agent.name} no Mapa Cultural`,
         url: window.location.href,
       });
     }
