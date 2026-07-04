@@ -18,6 +18,7 @@ export default function FeaturedContent({ onItemClick }: FeaturedContentProps) {
 
   const featuredTitle = appConfig?.siteConfig?.featuredTitle || 'Em destaque';
   const featuredDesc = appConfig?.siteConfig?.featuredDescription || 'Conteúdo exclusivo da SECRETARIA DE CULTURA, TURISMO E EVENTOS.';
+  const badgeUrl = appConfig?.siteConfig?.featuredBadgeUrl || "";
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -126,12 +127,20 @@ export default function FeaturedContent({ onItemClick }: FeaturedContentProps) {
                         <div className="text-stone-400">
                            {getIcon(item.category)}
                         </div>
-                        <img 
-                          src="https://i.postimg.cc/Zq16HdkJ/pefil.png" 
-                          alt="Selo oficial" 
-                          className="absolute -top-3 -right-3 w-8 h-8 z-10 drop-shadow-md rounded-full object-contain bg-white"
-                          referrerPolicy="no-referrer"
-                        />
+                        {badgeUrl ? (
+                          <img 
+                            src={badgeUrl} 
+                            alt="Selo oficial" 
+                            className="absolute -top-3 -right-3 w-8 h-8 z-10 drop-shadow-md rounded-full object-contain bg-white"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="absolute -top-3 -right-3 w-8 h-8 z-10 bg-amber-50 border border-amber-500 rounded-full flex items-center justify-center shadow-md bg-white">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 text-amber-600 fill-amber-400">
+                              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        )}
                      </div>
                      <div className="bg-[#0070BA] text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase flex items-center gap-2 shadow-lg">
                         {item.typeName || item.category}
@@ -150,12 +159,19 @@ export default function FeaturedContent({ onItemClick }: FeaturedContentProps) {
                        <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest mb-2">SELOS:</p>
                        <div className="flex gap-2">
                           {(item.official || item.certified) && (
-                            <img 
-                              src="https://i.postimg.cc/Zq16HdkJ/pefil.png" 
-                              alt="Oficial" 
-                              className="w-8 h-8 rounded-full object-contain bg-white shadow-md border border-stone-100"
-                              referrerPolicy="no-referrer"
-                            />
+                            badgeUrl ? (
+                              <img 
+                                src={badgeUrl} alt="Oficial" 
+                                className="w-8 h-8 rounded-full object-contain bg-white shadow-md border border-stone-100"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-500 flex items-center justify-center shadow-sm bg-white" title="Oficial">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 text-amber-600 fill-amber-400">
+                                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </div>
+                            )
                           )}
                           <div className="w-8 h-8 skeleton-placeholder bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
                              <FileText size={14} />

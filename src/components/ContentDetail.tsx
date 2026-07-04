@@ -33,9 +33,10 @@ interface ContentDetailProps {
   onDelete?: () => void;
   onRegister?: () => void;
   isOwnerOrAdmin?: boolean;
+  badgeUrl?: string;
 }
 
-export default function ContentDetail({ content, type, onBack, onEdit, onDelete, onRegister, isOwnerOrAdmin }: ContentDetailProps) {
+export default function ContentDetail({ content, type, onBack, onEdit, onDelete, onRegister, isOwnerOrAdmin, badgeUrl }: ContentDetailProps) {
   const [activeTab, setActiveTab] = useState('info');
 
   const formatDate = (dateStr: string) => {
@@ -235,12 +236,20 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
             <h1 className="text-3xl md:text-[52px] font-black text-stone-900 uppercase tracking-tighter leading-[0.9] mb-4 italic flex items-center gap-4">
               {content.name}
               {content.official && (
-                <img 
-                  src="https://i.postimg.cc/Zq16HdkJ/pefil.png" 
-                  alt="Selo oficial" 
-                  className="w-10 h-10 md:w-16 md:h-16 rounded-full object-contain bg-white shadow-2xl shrink-0"
-                  referrerPolicy="no-referrer"
-                />
+                badgeUrl ? (
+                  <img 
+                    src={badgeUrl} 
+                    alt="Selo oficial" 
+                    className="w-10 h-10 md:w-16 md:h-16 rounded-full object-contain bg-white shadow-2xl shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-amber-50 border-2 border-amber-500 shadow-xl flex items-center justify-center shrink-0" title="Selo Oficial">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 md:w-8 md:h-8 text-amber-600 fill-amber-400">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )
               )}
             </h1>
             

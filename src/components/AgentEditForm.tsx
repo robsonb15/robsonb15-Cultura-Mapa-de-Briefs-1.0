@@ -318,7 +318,7 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (type === 'banner') {
+    if (type === 'banner' || type === 'profile') {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPendingCropperSrc(reader.result as string);
@@ -335,11 +335,7 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
       const url = await uploadFile(file, path);
       setFormData(prev => {
         const oldImages = prev.images || { gallery: [] };
-        if (type === 'profile') {
-          return { ...prev, images: { ...oldImages, profile: url } };
-        } else {
-          return { ...prev, images: { ...oldImages, gallery: [...(oldImages.gallery || []), url] } };
-        }
+        return { ...prev, images: { ...oldImages, gallery: [...(oldImages.gallery || []), url] } };
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
@@ -1286,6 +1282,7 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
           <ImageCropperModal
             imageSrc={pendingCropperSrc}
             onConfirm={handleCropConfirm}
+            aspectRatio={pendingCropperInfo?.type === 'profile' ? 1 / 1 : 3 / 1}
             onCancel={() => {
               setPendingCropperSrc(null);
               setPendingCropperInfo(null);

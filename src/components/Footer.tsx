@@ -25,7 +25,7 @@ export default function Footer({ config, logoUrl, setView }: FooterProps) {
   };
 
   return (
-    <>
+    <div className="print:hidden">
       <div className="bg-white py-20 border-t border-stone-100 pb-32">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col items-center mb-24 cursor-pointer" onClick={() => handleNav('map')}>
@@ -164,6 +164,6 @@ export default function Footer({ config, logoUrl, setView }: FooterProps) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

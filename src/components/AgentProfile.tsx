@@ -30,9 +30,10 @@ interface AgentProfileProps {
   agent: CulturalAgent;
   onEdit?: () => void;
   isOwner?: boolean;
+  badgeUrl?: string;
 }
 
-export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfileProps) {
+export default function AgentProfile({ agent, onEdit, isOwner, badgeUrl }: AgentProfileProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
 
@@ -298,12 +299,20 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
             <h1 className="text-3xl md:text-[56px] font-black text-[#141414] uppercase tracking-tighter leading-none mb-1 flex items-center gap-4">
               {agent.name}
               {agent.certified && (
-                <img 
-                  src="https://i.postimg.cc/Zq16HdkJ/pefil.png" 
-                  alt="Agente Certificado" 
-                  className="w-10 h-10 md:w-16 md:h-16 rounded-full object-contain bg-white shadow-2xl shrink-0"
-                  referrerPolicy="no-referrer"
-                />
+                badgeUrl ? (
+                  <img 
+                    src={badgeUrl} 
+                    alt="Agente Certificado" 
+                    className="w-10 h-10 md:w-16 md:h-16 rounded-full object-contain bg-white shadow-2xl shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-amber-50 border-2 border-amber-500 shadow-xl flex items-center justify-center shrink-0" title="Agente Certificado">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 md:w-8 md:h-8 text-amber-600 fill-amber-400">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )
               )}
             </h1>
             {agent.socialName && (
@@ -394,7 +403,7 @@ export default function AgentProfile({ agent, onEdit, isOwner }: AgentProfilePro
                </p>
                
                {/* Enhanced map container with Real Leaflet Map */}
-               <div className="h-[420px] w-full bg-[#FAF9F6] border border-stone-200 relative overflow-hidden rounded-md group">
+               <div className="h-[420px] w-full bg-[#FAF9F6] border border-stone-200 relative overflow-hidden rounded-md group print:hidden">
                  {/* Leaflet Zoom Control overlay */}
                  <div className="absolute top-4 left-4 z-[1000] flex flex-col bg-white border border-stone-300 rounded shadow-md divide-y divide-stone-250 select-none pointer-events-auto">
                    <div className="w-8 h-8 flex items-center justify-center text-[18px] font-black text-stone-700 cursor-pointer hover:bg-stone-50" title="Aproximar" onClick={() => mapRef.current?.zoomIn()}>+</div>

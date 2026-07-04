@@ -8,6 +8,7 @@ import { generateAgentReport } from '../lib/pdf-utils';
 import AgentEditForm from './AgentEditForm';
 import ContentEditForm from './ContentEditForm';
 import { 
+  Award,
   Settings, 
   Users, 
   User,
@@ -2857,6 +2858,132 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Custom Badge Configuration Card */}
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-stone-100 space-y-6">
+                <div className="flex items-center gap-4 border-b border-stone-50 pb-4">
+                  <div className="w-12 h-12 bg-[#0070BA]/10 rounded-xl flex items-center justify-center text-[#0070BA]">
+                    <Award size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-stone-900 uppercase">Personalizar Selo de Destaque / Oficial</h4>
+                    <p className="text-xs text-stone-400 font-medium">Altere a imagem oficial do selo que aparece nas fotos, listas e perfis em destaque.</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-8 items-center">
+                  {/* Badge Preview */}
+                  <div className="flex flex-col items-center gap-2 bg-stone-50 p-6 rounded-3xl border border-stone-100 shrink-0 w-full lg:w-48">
+                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-tighter">Visualização</p>
+                    <div className="w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center p-2 border border-stone-100 relative group overflow-hidden">
+                      {config?.siteConfig?.featuredBadgeUrl ? (
+                        <img 
+                          src={config.siteConfig.featuredBadgeUrl} 
+                          alt="Selo de destaque" 
+                          className="w-full h-full object-contain"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Award className="w-10 h-10 text-[#0070BA]" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Inputs */}
+                  <div className="flex-1 space-y-4 w-full">
+                    <label className="text-[11px] font-black text-stone-400 uppercase tracking-tighter pl-1">URL da Imagem ou Enviar Arquivo</label>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <input
+                        type="url"
+                        value={config?.siteConfig?.featuredBadgeUrl || ''}
+                        onChange={e => setConfig(prev => prev ? ({ 
+                          ...prev, 
+                          siteConfig: { ...prev.siteConfig!, featuredBadgeUrl: e.target.value } 
+                        }) : null)}
+                        className="flex-1 bg-stone-50 border-none rounded-2xl px-6 py-4 text-stone-900 text-sm font-black outline-none focus:ring-2 focus:ring-stone-100"
+                        placeholder="https://..."
+                      />
+                      <label className="cursor-pointer bg-[#0070BA] hover:bg-[#005a96] text-white px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                        <Upload size={16} />
+                        Upload do Selo
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const base64String = await compressImageToBase64(file);
+                                setConfig(prev => prev ? ({ 
+                                  ...prev, 
+                                  siteConfig: { ...prev.siteConfig!, featuredBadgeUrl: base64String } 
+                                }) : null);
+                              } catch (err) {
+                                console.error("Erro ao comprimir imagem:", err);
+                              }
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <button
+                        onClick={async () => {
+                          if (!config) return;
+                          try {
+                            const updatePayload = {
+                              ...config,
+                              siteConfig: {
+                                ...config.siteConfig!,
+                                featuredBadgeUrl: config.siteConfig?.featuredBadgeUrl || ''
+                              },
+                              updatedAt: serverTimestamp()
+                            };
+                            await updateDoc(doc(db, 'config', 'app'), updatePayload as any);
+                            setStatus({ type: 'success', message: 'Selo de destaque salvo com sucesso!' });
+                            setTimeout(() => setStatus(null), 3000);
+                          } catch (error) {
+                            setStatus({ type: 'error', message: 'Falha ao salvar selo de destaque.' });
+                          }
+                        }}
+                        className="px-6 py-3 bg-stone-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#0070BA] transition-all flex items-center gap-2 shadow-lg"
+                      >
+                        <Save size={14} />
+                        Salvar Selo
+                      </button>
+                      {config?.siteConfig?.featuredBadgeUrl && (
+                        <button
+                          onClick={async () => {
+                            if (!config) return;
+                            try {
+                              const updatePayload = {
+                                ...config,
+                                siteConfig: {
+                                  ...config.siteConfig!,
+                                  featuredBadgeUrl: ""
+                                },
+                                updatedAt: serverTimestamp()
+                              };
+                              await updateDoc(doc(db, 'config', 'app'), updatePayload as any);
+                              setConfig(updatePayload);
+                              setStatus({ type: 'success', message: 'Selo restaurado para o padrão.' });
+                              setTimeout(() => setStatus(null), 3000);
+                            } catch (error) {
+                              setStatus({ type: 'error', message: 'Falha ao restaurar selo.' });
+                            }
+                          }}
+                          className="px-6 py-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                        >
+                          <X size={14} />
+                          Restaurar Padrão
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-6">
                   {[
                     { title: 'Agentes Culturais', items: agents, type: 'agent' },
@@ -2937,12 +3064,18 @@ export default function AdminPanel() {
                                     className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center transition-all ${isCertified ? 'bg-white shadow-lg border-2 border-[#0070BA]' : 'bg-stone-50 grayscale opacity-40 hover:opacity-100'}`}
                                     title={isCertified ? "Remover Selo" : "Dar Selo Oficial"}
                                   >
-                                    <img 
-                                      src="https://i.postimg.cc/Zq16HdkJ/pefil.png" 
-                                      alt="Selo"
-                                      className="w-full h-full object-contain"
-                                      referrerPolicy="no-referrer"
-                                    />
+                                    {config?.siteConfig?.featuredBadgeUrl ? (
+                                      <img 
+                                        src={config.siteConfig.featuredBadgeUrl} 
+                                        alt="Selo"
+                                        className="w-full h-full object-contain"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : (
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 text-amber-600 fill-amber-400">
+                                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                    )}
                                   </button>
                                 </div>
                               </div>

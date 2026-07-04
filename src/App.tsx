@@ -3,7 +3,7 @@ import { useAuth } from './lib/AuthContext';
 import { AccessibilityProvider, useAccessibility } from './contexts/AccessibilityContext';
 import AccessibilityToolbar from './components/AccessibilityToolbar';
 import { agentService } from './lib/agentService';
-import { CulturalAgent, AppConfig, StatsConfig } from './types';
+import { CulturalAgent, AppConfig, StatsConfig, AgentType } from './types';
 import Navbar from './components/Navbar';
 import AgentProfile from './components/AgentProfile';
 import AgentEditForm from './components/AgentEditForm';
@@ -73,7 +73,53 @@ function AppContent() {
 
   useEffect(() => {
     if (user) {
-      agentService.getAgent(user.uid).then(setMyAgent);
+      agentService.getAgent(user.uid).then((agent) => {
+        if (!agent && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
+          const robsonAgent: Omit<CulturalAgent, 'createdAt' | 'updatedAt'> = {
+            id: user.uid,
+            name: "ROBSON FARIAS PANTOJA",
+            socialName: "ROBSON FARIAS",
+            type: AgentType.INDIVIDUAL,
+            description: "Meu nome é Robson Farias, tenho 44 anos, casado pai de sete filhos, trabalho na área Designer gráfico, mais de 24 anos de experiência, trabalhei em várias tvs do município de Breves, Tv sbt, Tv Bandeirantes, Tv Record, tv Açaí, produção de designer dos telejornais, vídeos institucionais, comerciais, computação gráfica 3d, videografismo e designer das vinhetas, os programas que tenho domínio são: CorelDRAW, Photoshop, 3dmax, cinema4D, Affert effects, adobe premie, Vegas, ilustreito... Já atuei em várias campanhas políticas (5 campanhas MDB vencedoras), onde trabalhei com criação de designer para comerciais para TV, internet, para eventos como aniversários, formaturas e casamentos, em campanhas politicais para candidatos, arte final, santinho político, cartaz, praguinha, pragão, adesivos, wind banner, jornal informativo, folder, artes para bandeiras. Alguns trabalhos realizados na produção de peças gráficas.",
+            shortDescription: "Designer gráfico com mais de 24 anos de experiência em videografismo, 3D e publicidade.",
+            areasOfActivity: ["Design Gráfico", "Videografismo", "Animação 3D", "Computação Gráfica", "Produção de Vídeo"],
+            tags: ["CorelDRAW", "Photoshop", "3D Max", "Cinema 4D", "After Effects", "Premiere", "Vegas", "Illustrator"],
+            address: {
+              text: "Avenida Rio Branco, nº 2022, Bairro Aeroporto, Breves, PA - CEP: 68800-000",
+              lat: -1.6891195,
+              lng: -50.481232,
+              street: "Avenida Rio Branco",
+              number: "2022",
+              neighborhood: "Aeroporto",
+              city: "Breves",
+              state: "PA",
+              zipCode: "68800-000"
+            },
+            contactInfo: {
+              email: user.email || "robsonstudio15hd@gmail.com",
+              phone: "(91) 99103-2228",
+              website: ""
+            },
+            socialLinks: [
+              { platform: "Instagram", url: "https://instagram.com/robsonfarias" },
+              { platform: "Facebook", url: "https://facebook.com/robsonfarias" }
+            ],
+            images: {
+              banner: "https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg",
+              profile: "https://i.postimg.cc/Zq16HdkJ/pefil.png",
+              gallery: []
+            },
+            videos: [],
+            certified: true,
+            ownerId: user.uid,
+          };
+          agentService.createAgent(robsonAgent as any).then(() => {
+            setMyAgent(robsonAgent as any);
+          });
+        } else {
+          setMyAgent(agent);
+        }
+      });
     } else {
       setMyAgent(null);
     }
@@ -307,6 +353,7 @@ function AppContent() {
                 agent={selectedAgent} 
                 isOwner={user?.uid === selectedAgent.ownerId}
                 onEdit={() => handleSetView('edit')}
+                badgeUrl={appConfig?.siteConfig?.featuredBadgeUrl}
               />
           </div>
         ) : null;
@@ -408,6 +455,7 @@ function AppContent() {
                 handleSetView('opportunity_registration');
               }
             }}
+            badgeUrl={appConfig?.siteConfig?.featuredBadgeUrl}
           />
         ) : null;
       

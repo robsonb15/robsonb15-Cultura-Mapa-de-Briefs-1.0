@@ -205,6 +205,7 @@ export interface SiteConfig {
   heroPositionY?: number;
   featuredTitle?: string;
   featuredDescription?: string;
+  featuredBadgeUrl?: string;
   banners: BannerInfo[];
   categoryBanners?: CategoryBanner[];
   stats?: StatsConfig;

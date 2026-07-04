@@ -90,7 +90,8 @@ service cloud.firestore {
                     && isValidAgent(incoming())
                     && incoming().ownerId == request.auth.uid
                     && incoming().createdAt == request.time
-                    && incoming().updatedAt == request.time;
+                    && incoming().updatedAt == request.time
+                    && (isAdmin() || incoming().get('certified', false) == false);
 
       allow update: if (isAdmin() || isOwner(existing()))
                     && isValidAgent(incoming())
@@ -99,16 +100,19 @@ service cloud.firestore {
                     && incoming().updatedAt == request.time
                     && (
                       isAdmin() ||
-                      // Prevent non-admins from changing certain sensitive fields if necessary
-                      // or just ensure they follow the schema
-                      incoming().diff(existing()).affectedKeys().hasOnly([
-                        'name', 'socialName', 'cpf', 'type', 'description', 
-                        'shortDescription', 'areasOfActivity', 'tags', 'address', 
-                        'contactInfo', 'socialLinks', 'images', 'videos',
-                        'birthDate', 'gender', 'raceColor', 'education', 
-                        'disability', 'isSenior', 'sexualOrientation', 'updatedAt',
-                        'itinerantAgent', 'traditionalCommunities'
-                      ])
+                      (
+                        // Prevent non-admins from changing certain sensitive fields if necessary
+                        // or just ensure they follow the schema
+                        incoming().diff(existing()).affectedKeys().hasOnly([
+                          'name', 'socialName', 'cpf', 'type', 'description', 
+                          'shortDescription', 'areasOfActivity', 'tags', 'address', 
+                          'contactInfo', 'socialLinks', 'images', 'videos',
+                          'birthDate', 'gender', 'raceColor', 'education', 
+                          'disability', 'isSenior', 'sexualOrientation', 'updatedAt',
+                          'itinerantAgent', 'traditionalCommunities', 'externalLink', 'certified'
+                        ])
+                        && incoming().get('certified', false) == existing().get('certified', false)
+                      )
                     );
 
       allow delete: if isAdmin() || isOwner(existing());

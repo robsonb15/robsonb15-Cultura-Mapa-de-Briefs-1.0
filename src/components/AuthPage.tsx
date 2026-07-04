@@ -195,12 +195,12 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
   );
 
   return (
-    <div className="min-h-screen bg-[#F4F4F4] flex items-center justify-center p-4 py-20">
+    <div className="min-h-screen bg-[#F4F4F4] flex items-center justify-center p-4 py-4 sm:py-8">
       <motion.div 
         layout
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-[520px] w-full bg-white rounded-3xl shadow-xl overflow-hidden p-8 md:p-12"
+        className="max-w-[460px] w-full bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 md:p-8"
       >
         <AnimatePresence mode="wait">
           {/* LOGIN VIEW */}
@@ -210,24 +210,24 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-8"
+              className="space-y-5"
             >
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-stone-900 mb-2">Entrar usuários</h1>
-                <p className="text-stone-500 text-sm">Acesse sua conta no Mapa Cultural</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-1">Entrar usuários</h1>
+                <p className="text-stone-500 text-xs sm:text-sm">Acesse sua conta no Mapa Cultural</p>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-1">
                   <label className="text-xs font-bold text-stone-900">E-mail</label>
                   <input 
                     type="email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border border-stone-200 rounded-lg p-4 text-sm outline-none focus:border-[#0070BA] transition-colors"
+                    className="w-full border border-stone-200 rounded-lg p-3 sm:p-3.5 text-sm outline-none focus:border-[#0070BA] transition-colors"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex justify-between">
                     <label className="text-xs font-bold text-stone-900">Senha</label>
                     <button 
@@ -248,7 +248,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full border border-stone-200 rounded-lg p-4 text-sm outline-none focus:border-[#0070BA] transition-colors pr-12"
+                      className="w-full border border-stone-200 rounded-lg p-3 sm:p-3.5 text-sm outline-none focus:border-[#0070BA] transition-colors pr-12"
                     />
                     <button 
                       type="button" 
@@ -261,7 +261,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 p-4 rounded-lg space-y-2">
+                  <div className="bg-red-50 p-3 rounded-lg space-y-1.5">
                     <p className="text-red-500 text-xs font-bold">{error}</p>
                     {error.includes('em uso') && (
                       <button 
@@ -276,19 +276,19 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
                 )}
 
                 {iframeWarning && (
-                  <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl space-y-3 text-stone-800 text-sm">
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2 text-stone-800 text-sm">
                     <div className="flex gap-2 items-start text-amber-600 font-extrabold uppercase text-xs tracking-tight">
-                      <Info size={16} className="shrink-0 mt-0.5" />
+                      <Info size={14} className="shrink-0 mt-0.5" />
                       <span>Restrição de Navegador (IFrame)</span>
                     </div>
-                    <p className="text-xs text-stone-600 leading-relaxed">
-                      Os navegadores modernos bloqueiam pop-ups do Google dentro de iframes (como o ambiente de testes do AI Studio) por motivos de segurança contra rastreamento.
+                    <p className="text-[11px] text-stone-600 leading-relaxed">
+                      Os navegadores modernos bloqueiam pop-ups do Google dentro de iframes por segurança contra rastreamento.
                     </p>
-                    <div className="bg-white/60 p-3 rounded-lg space-y-1.5 text-xs border border-amber-100">
+                    <div className="bg-white/60 p-2.5 rounded-lg space-y-1 text-[11px] border border-amber-100">
                       <p className="font-bold text-stone-700">Como resolver:</p>
-                      <ul className="list-disc list-inside space-y-1 text-stone-600">
-                        <li><strong>Abrir em nova aba:</strong> Clique no ícone de "Abrir em nova aba" no topo direito do painel de visualização do AI Studio para usar o login do Google normalmente.</li>
-                        <li><strong>E-mail e Senha:</strong> Se preferir, use o formulário tradicional ou crie uma conta com e-mail e senha no botão "Fazer cadastro" abaixo.</li>
+                      <ul className="list-disc list-inside space-y-0.5 text-stone-600">
+                        <li><strong>Abrir em nova aba:</strong> Clique no ícone de "Abrir em nova aba" no topo direito do AI Studio.</li>
+                        <li><strong>E-mail e Senha:</strong> Crie uma conta com e-mail e senha no botão abaixo.</li>
                       </ul>
                     </div>
                   </div>
@@ -296,13 +296,13 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
 
                 <button 
                   disabled={loading}
-                  className="w-full bg-[#0070BA] text-white py-4 rounded-lg font-bold text-sm hover:bg-[#005ea6] transition-all disabled:opacity-50"
+                  className="w-full bg-[#0070BA] text-white py-3 sm:py-3.5 rounded-lg font-bold text-sm hover:bg-[#005ea6] transition-all disabled:opacity-50"
                 >
                   {loading ? 'Carregando...' : 'Entrar'}
                 </button>
               </form>
 
-              <div className="flex items-center gap-4 text-stone-300">
+              <div className="flex items-center gap-3 text-stone-300 py-1">
                 <div className="h-[1px] flex-1 bg-current" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Ou</span>
                 <div className="h-[1px] flex-1 bg-current" />
@@ -310,17 +310,17 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
 
               <button 
                 onClick={handleGoogleLogin}
-                className="w-full border border-stone-200 py-4 rounded-lg font-bold text-sm flex items-center justify-center gap-3 hover:bg-stone-50 transition-colors"
+                className="w-full border border-stone-200 py-3 sm:py-3.5 rounded-lg font-bold text-sm flex items-center justify-center gap-3 hover:bg-stone-50 transition-colors"
               >
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
                 Entrar com Google
               </button>
 
-              <div className="pt-6 border-t border-stone-100 text-center space-y-4">
-                <p className="text-sm text-stone-500">Ainda não tem cadastro?</p>
+              <div className="pt-4 border-t border-stone-100 text-center space-y-3">
+                <p className="text-xs sm:text-sm text-stone-500">Ainda não tem cadastro?</p>
                 <button 
                   onClick={() => setStep('register_account')}
-                  className="w-full bg-[#0070BA] text-white py-4 rounded-lg font-bold text-sm hover:bg-[#005ea6] transition-all"
+                  className="w-full bg-[#0070BA] text-white py-3 sm:py-3.5 rounded-lg font-bold text-sm hover:bg-[#005ea6] transition-all"
                 >
                   Fazer cadastro
                 </button>
@@ -732,8 +732,8 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
         </AnimatePresence>
 
         {/* Info Footer */}
-        <div className="mt-12 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-          <Info className="text-[#0070BA] shrink-0" size={20} />
+        <div className="mt-6 flex items-center gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+          <Info className="text-[#0070BA] shrink-0" size={16} />
           <p className="text-[10px] text-blue-900/60 font-medium leading-relaxed">
             Seus dados estão protegidos conforme a LGPD. O Mapa Cultural nunca solicita sua senha por e-mail ou telefone.
           </p>
