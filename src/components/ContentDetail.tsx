@@ -83,6 +83,88 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
     }
   };
 
+  const getPhaseStatus = (startDate?: string, endDate?: string) => {
+    if (!startDate && !endDate) {
+      return {
+        status: 'pending',
+        label: 'A definir',
+        colorClass: 'bg-stone-300 border-stone-50',
+        badgeClass: 'bg-stone-100 text-stone-500 border border-stone-200'
+      };
+    }
+
+    const now = new Date();
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    const isStartValid = start && !isNaN(start.getTime());
+    const isEndValid = end && !isNaN(end.getTime());
+
+    if (isStartValid && isEndValid) {
+      if (now < start) {
+        return {
+          status: 'pending',
+          label: 'A iniciar',
+          colorClass: 'bg-stone-300 border-stone-50',
+          badgeClass: 'bg-stone-100 text-stone-500 border border-stone-200'
+        };
+      } else if (now >= start && now <= end) {
+        return {
+          status: 'active',
+          label: 'Em Andamento',
+          colorClass: 'bg-emerald-500 border-emerald-50 animate-pulse',
+          badgeClass: 'bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold'
+        };
+      } else {
+        return {
+          status: 'completed',
+          label: 'Finalizada',
+          colorClass: 'bg-red-500 border-red-50',
+          badgeClass: 'bg-red-50 text-red-600 border border-red-100 font-bold'
+        };
+      }
+    } else if (isStartValid) {
+      if (now < start) {
+        return {
+          status: 'pending',
+          label: 'A iniciar',
+          colorClass: 'bg-stone-300 border-stone-50',
+          badgeClass: 'bg-stone-100 text-stone-500 border border-stone-200'
+        };
+      } else {
+        return {
+          status: 'active',
+          label: 'Em Andamento',
+          colorClass: 'bg-emerald-500 border-emerald-50 animate-pulse',
+          badgeClass: 'bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold'
+        };
+      }
+    } else if (isEndValid) {
+      if (now <= end) {
+        return {
+          status: 'active',
+          label: 'Em Andamento',
+          colorClass: 'bg-emerald-500 border-emerald-50 animate-pulse',
+          badgeClass: 'bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold'
+        };
+      } else {
+        return {
+          status: 'completed',
+          label: 'Finalizada',
+          colorClass: 'bg-red-500 border-red-50',
+          badgeClass: 'bg-red-50 text-red-600 border border-red-100 font-bold'
+        };
+      }
+    }
+
+    return {
+      status: 'pending',
+      label: 'A iniciar',
+      colorClass: 'bg-stone-300 border-stone-50',
+      badgeClass: 'bg-stone-100 text-stone-500 border border-stone-200'
+    };
+  };
+
   const downloadFile = async (url: string, defaultName: string) => {
     if (!url || url === '#' || url === '') return;
 
@@ -337,22 +419,30 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
                   {content.timelinePhases && content.timelinePhases.length > 0 ? (
                     <div className="bg-stone-50 rounded-[2.5rem] p-8 md:p-12 border border-stone-100 shadow-inner relative overflow-hidden">
                       <div className="relative pl-8 border-l-2 border-stone-300/80 space-y-12 py-2">
-                        {content.timelinePhases.map((phase: any, index: number) => (
-                          <div key={index} className="relative group">
-                            {/* Dot */}
-                            <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-stone-700 border-4 border-stone-50 transition-all group-hover:bg-stone-900 group-hover:scale-110 shadow-xs" />
-                            
-                            {/* Content */}
-                            <div className="space-y-1">
-                              <h3 className="text-stone-900 font-bold font-sans text-sm md:text-base tracking-tight leading-snug">
-                                {phase.name}
-                              </h3>
-                              <p className="text-stone-600 text-xs md:text-sm font-medium">
-                                {formatPhaseDates(phase.startDate, phase.endDate)}
-                              </p>
+                        {content.timelinePhases.map((phase: any, index: number) => {
+                          const phaseStatus = getPhaseStatus(phase.startDate, phase.endDate);
+                          return (
+                            <div key={index} className="relative group">
+                              {/* Dot */}
+                              <div className={`absolute -left-[41px] top-1 w-5 h-5 rounded-full border-4 border-stone-50 transition-all group-hover:scale-110 shadow-xs ${phaseStatus.colorClass}`} />
+                              
+                              {/* Content */}
+                              <div className="space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h3 className="text-stone-900 font-bold font-sans text-sm md:text-base tracking-tight leading-snug">
+                                    {phase.name}
+                                  </h3>
+                                  <span className={`text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${phaseStatus.badgeClass}`}>
+                                    {phaseStatus.label}
+                                  </span>
+                                </div>
+                                <p className="text-stone-600 text-xs md:text-sm font-medium">
+                                  {formatPhaseDates(phase.startDate, phase.endDate)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
