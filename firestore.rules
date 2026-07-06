@@ -187,11 +187,19 @@ service cloud.firestore {
     }
 
     match /opportunity_registrations/{registrationId} {
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/opportunities/$(resource.data.opportunityId)) && get(/databases/$(database)/documents/opportunities/$(resource.data.opportunityId)).data.ownerId == request.auth.uid)
+      );
       allow create: if isSignedIn() 
                     && isValidId(registrationId) 
                     && incoming().userId == request.auth.uid;
-      allow update: if isSignedIn() && (request.auth.uid == existing().userId || isAdmin());
+      allow update: if isSignedIn() && (
+        request.auth.uid == existing().userId || 
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/opportunities/$(existing().opportunityId)) && get(/databases/$(database)/documents/opportunities/$(existing().opportunityId)).data.ownerId == request.auth.uid)
+      );
       allow delete: if isSignedIn() && (request.auth.uid == existing().userId || isAdmin());
     }
 

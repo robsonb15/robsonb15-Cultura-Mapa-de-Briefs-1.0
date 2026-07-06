@@ -297,6 +297,7 @@ export interface CulturalOpportunity {
   files?: { name: string; url: string }[];
   modelFiles?: Record<string, string>;
   agentLabel?: string;
+  timelinePhases?: { name: string; startDate?: string; endDate?: string }[];
 }
 
 export interface CulturalProject {

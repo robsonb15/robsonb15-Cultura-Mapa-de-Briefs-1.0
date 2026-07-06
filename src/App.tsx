@@ -74,7 +74,8 @@ function AppContent() {
   useEffect(() => {
     if (user) {
       agentService.getAgent(user.uid).then((agent) => {
-        if (!agent && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
+        const isDeleted = localStorage.getItem(`deleted_agent_${user.uid}`) === 'true';
+        if (!agent && !isDeleted && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
           const robsonAgent: Omit<CulturalAgent, 'createdAt' | 'updatedAt'> = {
             id: user.uid,
             name: "ROBSON FARIAS PANTOJA",

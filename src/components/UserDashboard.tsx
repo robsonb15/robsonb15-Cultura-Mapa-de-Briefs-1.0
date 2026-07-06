@@ -135,10 +135,33 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
 
   const fetchRegistrations = async () => {
     if (!user) return;
-    const regs = isAdmin 
-      ? await contentService.getAllRegistrations()
-      : await contentService.getUserRegistrations(user.uid);
-    setRegistrations(regs);
+    try {
+      if (isAdmin) {
+        const regs = await contentService.getAllRegistrations();
+        setRegistrations(regs);
+      } else {
+        // Fetch registrations submitted by the user
+        const userRegs = await contentService.getUserRegistrations(user.uid);
+        
+        // Also fetch opportunities owned by this user to load received registrations
+        const myOpps = await contentService.getMyContent('opportunity', user.uid);
+        const oppIds = myOpps.map(o => o.id);
+        
+        let receivedRegs: any[] = [];
+        if (oppIds.length > 0) {
+          receivedRegs = await contentService.getRegistrationsForOpportunities(oppIds);
+        }
+        
+        // Merge both lists ensuring uniqueness by registration ID
+        const allRegsMap = new Map();
+        userRegs.forEach(r => allRegsMap.set(r.id, r));
+        receivedRegs.forEach(r => allRegsMap.set(r.id, r));
+        
+        setRegistrations(Array.from(allRegsMap.values()));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar inscrições:", error);
+    }
   };
 
   const fetchContent = async () => {
@@ -185,9 +208,15 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
       const finalType = selectedType || editingContent.type;
       await contentService.saveContent(finalType, data, user.uid);
       setEditingContent(null);
-      fetchContent();
+      await fetchContent();
+      // If saving an opportunity, also update registrations so the lists are fully synced
+      if (finalType === 'opportunity') {
+        await fetchRegistrations();
+      }
+      alert('Registro salvo com sucesso!');
     } catch (error) {
       console.error('Error saving content:', error);
+      alert('Erro ao salvar o registro. Por favor, verifique os campos obrigatórios.');
     }
   };
 
@@ -198,6 +227,23 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
       fetchContent();
     } catch (error) {
       console.error('Error deleting content:', error);
+    }
+  };
+
+  const handleUpdateRegistrationStatus = async (regId: string, newStatus: 'approved' | 'rejected' | 'under_review') => {
+    const statusLabel = newStatus === 'approved' ? 'Aprovar' : newStatus === 'rejected' ? 'Reprovar' : 'Colocar Em Avaliação';
+    if (!window.confirm(`Tem certeza que deseja alterar o status desta inscrição para "${statusLabel}"?`)) return;
+    try {
+      await updateDoc(doc(db, 'opportunity_registrations', regId), { 
+        status: newStatus, 
+        updatedAt: serverTimestamp() 
+      });
+      // Update local state
+      setRegistrations(prev => prev.map(r => r.id === regId ? { ...r, status: newStatus, updatedAt: { seconds: Date.now() / 1000 } } : r));
+      alert('Status da inscrição atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar status da inscrição:', error);
+      alert('Erro ao atualizar o status da inscrição.');
     }
   };
 
@@ -793,9 +839,14 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                                  <span className="px-3 py-1 bg-red-50 text-red-600 font-mono text-xs font-black rounded-lg">{reg.registrationNumber}</span>
                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${
                                    reg.status === 'submitted' ? 'bg-blue-100 text-blue-700' : 
-                                   reg.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600'
+                                   reg.status === 'under_review' ? 'bg-amber-100 text-amber-700' : 
+                                   reg.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 
+                                   reg.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-stone-200 text-stone-600'
                                  }`}>
-                                   {reg.status === 'submitted' ? 'Recebido' : reg.status === 'approved' ? 'Aprovado' : reg.status}
+                                   {reg.status === 'submitted' ? 'Recebido' : 
+                                    reg.status === 'under_review' ? 'Em Avaliação' : 
+                                    reg.status === 'approved' ? 'Aprovado' : 
+                                    reg.status === 'rejected' ? 'Reprovado' : reg.status}
                                  </span>
                               </div>
                               <div>
@@ -848,6 +899,31 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                                 Detalhes
                                 <ChevronRight size={18} />
                               </button>
+
+                              {reg.status !== 'approved' && (
+                                <button 
+                                  onClick={() => handleUpdateRegistrationStatus(reg.id, 'approved')}
+                                  className="px-5 py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  Aprovar
+                                </button>
+                              )}
+                              {reg.status !== 'rejected' && (
+                                <button 
+                                  onClick={() => handleUpdateRegistrationStatus(reg.id, 'rejected')}
+                                  className="px-5 py-4 bg-rose-50 text-rose-600 rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  Reprovar
+                                </button>
+                              )}
+                              {reg.status === 'submitted' && (
+                                <button 
+                                  onClick={() => handleUpdateRegistrationStatus(reg.id, 'under_review')}
+                                  className="px-5 py-4 bg-amber-50 text-amber-600 rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  Avaliar
+                                </button>
+                              )}
                            </div>
                         </div>
                      </div>
@@ -909,7 +985,7 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                           </div>
                        </div>
                        <div className="flex items-center gap-3">
-                          {isAdmin && (
+                          {(isAdmin || item.ownerId === user.uid) && (
                             <button 
                               onClick={() => setViewingRegistrations(item.id)}
                               className="flex items-center gap-2 px-5 py-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all text-[10px] font-black uppercase tracking-tighter border border-blue-100 shadow-sm"

@@ -15,7 +15,11 @@ import {
   CheckCircle2,
   Upload,
   CloudUpload,
-  Shield
+  Shield,
+  Trash2,
+  Plus,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageCropperModal from './ImageCropperModal';
@@ -427,6 +431,147 @@ export default function ContentEditForm({ type, initialData, onSave, onCancel, i
                     placeholder="EX: PREFEITURA MUNICIPAL..."
                   />
                 </div>
+
+                {/* Linha de Tempo das Fases / Cronograma */}
+                <div className="md:col-span-2 bg-stone-50 p-6 md:p-8 rounded-[2rem] border border-stone-200/60 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-black text-stone-900 uppercase tracking-tighter">Cronograma de Fases (Linha de Tempo)</h4>
+                      <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tight mt-0.5">Defina as datas das etapas/fases para ordenar o andamento</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const standardPhases = [
+                          { name: 'Fase de Inscrições', startDate: formData.startDate || '', endDate: formData.deadline || '' },
+                          { name: 'Fase de Seleção / Avaliação', startDate: '', endDate: '' },
+                          { name: 'Habilitação Documental', startDate: '', endDate: '' },
+                          { name: 'Publicação final do resultado', startDate: '', endDate: '' }
+                        ];
+                        setFormData({ ...formData, timelinePhases: standardPhases });
+                      }}
+                      className="px-4 py-2.5 bg-[#0070BA]/5 hover:bg-[#0070BA]/10 text-[#0070BA] rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all cursor-pointer border border-[#0070BA]/10"
+                    >
+                      Preencher Fases Padrão
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(formData.timelinePhases || []).map((phase: any, index: number) => (
+                      <div key={index} className="flex flex-col sm:flex-row gap-4 bg-white p-5 rounded-2xl border border-stone-150 relative shadow-xs">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[9px] font-black text-stone-400 uppercase tracking-tighter pl-1">Nome da Fase*</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ex: Fase de Inscrições"
+                            value={phase.name || ''}
+                            onChange={e => {
+                              const updated = [...(formData.timelinePhases || [])];
+                              updated[index] = { ...updated[index], name: e.target.value };
+                              setFormData({ ...formData, timelinePhases: updated });
+                            }}
+                            className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-2 text-xs font-black outline-none focus:ring-2 focus:ring-[#0070BA]/20 transition-all text-stone-800"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 shrink-0 sm:w-80">
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-stone-400 uppercase tracking-tighter pl-1">Início</label>
+                            <input
+                              type="datetime-local"
+                              value={phase.startDate || ''}
+                              onChange={e => {
+                                const updated = [...(formData.timelinePhases || [])];
+                                updated[index] = { ...updated[index], startDate: e.target.value };
+                                setFormData({ ...formData, timelinePhases: updated });
+                              }}
+                              className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-2 text-[10px] font-bold outline-none focus:ring-2 focus:ring-[#0070BA]/20 transition-all text-stone-800"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-stone-400 uppercase tracking-tighter pl-1">Fim</label>
+                            <input
+                              type="datetime-local"
+                              value={phase.endDate || ''}
+                              onChange={e => {
+                                const updated = [...(formData.timelinePhases || [])];
+                                updated[index] = { ...updated[index], endDate: e.target.value };
+                                setFormData({ ...formData, timelinePhases: updated });
+                              }}
+                              className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-2 text-[10px] font-bold outline-none focus:ring-2 focus:ring-[#0070BA]/20 transition-all text-stone-800"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-end justify-end gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => {
+                              if (index === 0) return;
+                              const updated = [...(formData.timelinePhases || [])];
+                              const temp = updated[index];
+                              updated[index] = updated[index - 1];
+                              updated[index - 1] = temp;
+                              setFormData({ ...formData, timelinePhases: updated });
+                            }}
+                            className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Mover para cima"
+                          >
+                            <ChevronUp size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === (formData.timelinePhases || []).length - 1}
+                            onClick={() => {
+                              if (index === (formData.timelinePhases || []).length - 1) return;
+                              const updated = [...(formData.timelinePhases || [])];
+                              const temp = updated[index];
+                              updated[index] = updated[index + 1];
+                              updated[index + 1] = temp;
+                              setFormData({ ...formData, timelinePhases: updated });
+                            }}
+                            className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Mover para baixo"
+                          >
+                            <ChevronDown size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = (formData.timelinePhases || []).filter((_: any, i: number) => i !== index);
+                              setFormData({ ...formData, timelinePhases: updated });
+                            }}
+                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Remover Fase"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {(formData.timelinePhases || []).length === 0 && (
+                      <div className="text-center py-6 bg-white rounded-2xl border-2 border-dashed border-stone-200 text-stone-400 text-xs font-bold uppercase tracking-tighter">
+                        Nenhuma fase adicionada. Use o botão acima para carregar as fases padrão ou adicione manualmente.
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = [...(formData.timelinePhases || []), { name: '', startDate: '', endDate: '' }];
+                        setFormData({ ...formData, timelinePhases: updated });
+                      }}
+                      className="text-[11px] font-black text-[#0070BA] uppercase tracking-tighter hover:underline flex items-center gap-1 mt-2 pl-1 cursor-pointer"
+                    >
+                      <Plus size={14} />
+                      Adicionar Nova Fase
+                    </button>
+                  </div>
+                </div>
+
                 <div id="segment-selector" className="md:col-span-2 space-y-3">
                   <label className="text-[11px] font-black text-stone-400 uppercase tracking-tighter pl-1 flex items-center justify-between">
                     <span>Áreas de Interesse / Segmentos</span>

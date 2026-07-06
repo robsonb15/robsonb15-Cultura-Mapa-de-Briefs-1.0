@@ -52,6 +52,37 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
            date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatPhaseDates = (startDate?: string, endDate?: string) => {
+    if (!startDate && !endDate) return 'Data a definir';
+    
+    const parseAndFormat = (dateStr: string) => {
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const dStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const hasTime = hours !== 0 || minutes !== 0;
+        
+        if (hasTime) {
+          const tStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          return `${dStr} às ${tStr}`;
+        }
+        return dStr;
+      } catch (e) {
+        return dateStr;
+      }
+    };
+
+    if (startDate && endDate) {
+      return `de ${parseAndFormat(startDate)} a ${parseAndFormat(endDate)}`;
+    } else if (startDate) {
+      return `Início em ${parseAndFormat(startDate)}`;
+    } else {
+      return `Prazo final: ${parseAndFormat(endDate!)}`;
+    }
+  };
+
   const downloadFile = async (url: string, defaultName: string) => {
     if (!url || url === '#' || url === '') return;
 
@@ -296,21 +327,45 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 pb-24">
           <div className="lg:col-span-8 space-y-16">
              {/* Timeline Section for Opportunities/Events */}
-             {(content.startDate || content.deadline) && (
+             {((content.startDate || content.deadline) || (content.timelinePhases && content.timelinePhases.length > 0)) && (
                <section>
                   <div className="flex flex-col gap-1 mb-8">
                     <h2 className="text-[32px] font-black text-stone-900 uppercase tracking-tighter italic leading-none">Cronograma</h2>
-                    <span className="text-[10px] font-black text-stone-300 uppercase tracking-[0.4em] mb-6">DATAS IMPORTANTES</span>
+                    <span className="text-[10px] font-black text-stone-300 uppercase tracking-[0.4em] mb-6">Etapas e Fases</span>
                   </div>
-                  <div className="bg-stone-50 rounded-[2rem] p-10 border border-stone-100 shadow-inner relative overflow-hidden">
-                     <div className="absolute top-0 right-0 p-8 opacity-5">
-                        <Calendar size={120} className="text-stone-900" />
-                     </div>
-                     <p className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-tight">
-                       {content.startDate && <>De <span className="text-[#0070BA]">{formatDate(content.startDate)}</span></>}
-                       {content.deadline && <> a <span className="text-[#0070BA]">{formatDateTime(content.deadline)}</span></>}
-                     </p>
-                  </div>
+
+                  {content.timelinePhases && content.timelinePhases.length > 0 ? (
+                    <div className="bg-stone-50 rounded-[2.5rem] p-8 md:p-12 border border-stone-100 shadow-inner relative overflow-hidden">
+                      <div className="relative pl-8 border-l-2 border-stone-300/80 space-y-12 py-2">
+                        {content.timelinePhases.map((phase: any, index: number) => (
+                          <div key={index} className="relative group">
+                            {/* Dot */}
+                            <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-stone-700 border-4 border-stone-50 transition-all group-hover:bg-stone-900 group-hover:scale-110 shadow-xs" />
+                            
+                            {/* Content */}
+                            <div className="space-y-1">
+                              <h3 className="text-stone-900 font-bold font-sans text-sm md:text-base tracking-tight leading-snug">
+                                {phase.name}
+                              </h3>
+                              <p className="text-stone-600 text-xs md:text-sm font-medium">
+                                {formatPhaseDates(phase.startDate, phase.endDate)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-stone-50 rounded-[2rem] p-10 border border-stone-100 shadow-inner relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-8 opacity-5">
+                          <Calendar size={120} className="text-stone-900" />
+                       </div>
+                       <p className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-tight">
+                         {content.startDate && <>De <span className="text-[#0070BA]">{formatDate(content.startDate)}</span></>}
+                         {content.deadline && <> a <span className="text-[#0070BA]">{formatDateTime(content.deadline)}</span></>}
+                       </p>
+                    </div>
+                  )}
                </section>
              )}
 

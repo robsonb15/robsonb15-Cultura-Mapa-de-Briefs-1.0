@@ -3,6 +3,7 @@ import { auth, db } from '../lib/firebase';
 import { doc, getDoc, setDoc, collection, getDocs, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
 import { checkIsAdmin, sanitizeText } from '../lib/auth-utils';
+import { agentService } from '../lib/agentService';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateAgentReport } from '../lib/pdf-utils';
 import AgentEditForm from './AgentEditForm';
@@ -482,7 +483,7 @@ export default function AdminPanel() {
     }
 
     try {
-      await deleteDoc(doc(db, 'agents', agentId));
+      await agentService.deleteAgent(agentId);
       setAgents(prev => prev.filter(a => a.id !== agentId));
       setStatus({ type: 'success', message: 'Agente cultural removido com sucesso.' });
       setTimeout(() => setStatus(null), 3000);

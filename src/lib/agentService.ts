@@ -140,6 +140,7 @@ export const agentService = {
       };
       await setDoc(docRef, data);
       try {
+        localStorage.removeItem(`deleted_agent_${agentId}`);
         localStorage.setItem(`cached_agent_my`, JSON.stringify(data));
         localStorage.setItem(`cached_agent_${agentId}`, JSON.stringify(data));
       } catch (e) {}
@@ -180,6 +181,7 @@ export const agentService = {
       const docRef = doc(db, AGENTS_COLLECTION, id);
       await deleteDoc(docRef);
       try {
+        localStorage.setItem(`deleted_agent_${id}`, 'true');
         localStorage.removeItem(`cached_agent_${id}`);
         localStorage.removeItem(`cached_agent_my`);
       } catch (e) {}

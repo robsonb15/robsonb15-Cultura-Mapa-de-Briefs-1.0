@@ -180,6 +180,28 @@ export const contentService = {
     }
   },
 
+  async getRegistrationsForOpportunities(opportunityIds: string[]) {
+    if (!opportunityIds || opportunityIds.length === 0) return [];
+    try {
+      const results: any[] = [];
+      // Chunk opportunityIds in groups of 30 because Firestore 'in' query supports up to 30 items
+      for (let i = 0; i < opportunityIds.length; i += 30) {
+        const chunk = opportunityIds.slice(i, i + 30);
+        const q = query(
+          collection(db, 'opportunity_registrations'),
+          where('opportunityId', 'in', chunk),
+          orderBy('updatedAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        results.push(...snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+      return results;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'opportunity_registrations');
+      return [];
+    }
+  },
+
   async getContentById(type: string, id: string) {
     const collectionName = this.getCollectionName(type);
     try {
