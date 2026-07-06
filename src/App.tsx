@@ -353,6 +353,17 @@ function AppContent() {
                 agent={selectedAgent} 
                 isOwner={user?.uid === selectedAgent.ownerId}
                 onEdit={() => handleSetView('edit')}
+                onDelete={async () => {
+                  if (window.confirm('Tem certeza que deseja excluir seu perfil de agente cultural? Esta ação é irreversível e excluirá sua publicação.')) {
+                    await agentService.deleteAgent(selectedAgent.id);
+                    setMyAgent(null);
+                    setSelectedAgent(null);
+                    handleSetView('map');
+                    if (typeof window !== 'undefined') {
+                      window.location.reload();
+                    }
+                  }
+                }}
                 badgeUrl={appConfig?.siteConfig?.featuredBadgeUrl}
               />
           </div>
@@ -442,7 +453,13 @@ function AppContent() {
             onDelete={async () => {
               if (window.confirm('Excluir permanentemente?')) {
                 await contentService.deleteContent(contentType, selectedContent.id);
-                handleSetView('oportunidades');
+                const backViews: Record<string, ViewMode> = {
+                  'space': 'espacos',
+                  'event': 'eventos',
+                  'opportunity': 'oportunidades',
+                  'project': 'projetos'
+                };
+                handleSetView(backViews[contentType] || 'map');
               }
             }}
             onRegister={() => {

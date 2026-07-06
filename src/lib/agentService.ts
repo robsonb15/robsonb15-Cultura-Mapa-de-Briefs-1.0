@@ -175,6 +175,19 @@ export const agentService = {
     }
   },
 
+  async deleteAgent(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, AGENTS_COLLECTION, id);
+      await deleteDoc(docRef);
+      try {
+        localStorage.removeItem(`cached_agent_${id}`);
+        localStorage.removeItem(`cached_agent_my`);
+      } catch (e) {}
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `${AGENTS_COLLECTION}/${id}`);
+    }
+  },
+
   async getAppConfig(): Promise<AppConfig | null> {
     try {
       const docSnap = await getDoc(doc(db, 'config', 'app'));

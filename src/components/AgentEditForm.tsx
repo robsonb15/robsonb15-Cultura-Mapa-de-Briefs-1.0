@@ -197,8 +197,9 @@ export default function AgentEditForm({ initialData, onSave, onCancel, isAdmin }
     if (!editMapRef.current) {
       const map = L.map(editMapContainerRef.current, {
         zoomControl: false,
-        attributionControl: false
-      }).setView([lat, lng], 17);
+        attributionControl: false,
+        tap: false
+      } as any).setView([lat, lng], 17);
 
       const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,

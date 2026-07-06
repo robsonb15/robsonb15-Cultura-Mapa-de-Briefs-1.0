@@ -22,18 +22,20 @@ import {
   X,
   Play,
   Send,
-  Printer
+  Printer,
+  Trash2
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface AgentProfileProps {
   agent: CulturalAgent;
   onEdit?: () => void;
+  onDelete?: () => void;
   isOwner?: boolean;
   badgeUrl?: string;
 }
 
-export default function AgentProfile({ agent, onEdit, isOwner, badgeUrl }: AgentProfileProps) {
+export default function AgentProfile({ agent, onEdit, onDelete, isOwner, badgeUrl }: AgentProfileProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
 
@@ -106,8 +108,9 @@ export default function AgentProfile({ agent, onEdit, isOwner, badgeUrl }: Agent
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
-        attributionControl: false
-      }).setView([lat, lng], 17);
+        attributionControl: false,
+        tap: false
+      } as any).setView([lat, lng], 17);
 
       const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
@@ -545,7 +548,7 @@ export default function AgentProfile({ agent, onEdit, isOwner, badgeUrl }: Agent
             </div>
 
             {isOwner && (
-              <div className="pt-8 border-t border-stone-100">
+              <div className="pt-8 border-t border-stone-100 space-y-3">
                  <button 
                   onClick={onEdit}
                   className="w-full bg-stone-900 text-white px-6 py-4 rounded-xl font-black text-[12px] tracking-tighter uppercase hover:bg-stone-800 transition-all shadow-lg flex items-center justify-center gap-3 focus-within:ring-0"
@@ -553,6 +556,15 @@ export default function AgentProfile({ agent, onEdit, isOwner, badgeUrl }: Agent
                   <Edit3 size={18} />
                   Editar Perfil
                 </button>
+                {onDelete && (
+                  <button 
+                    onClick={onDelete}
+                    className="w-full bg-white text-red-600 border-2 border-red-50 px-6 py-4 rounded-xl font-black text-[12px] tracking-tighter uppercase hover:bg-red-50 transition-all flex items-center justify-center gap-3 focus-within:ring-0 cursor-pointer"
+                  >
+                    <Trash2 size={18} />
+                    Remover Perfil
+                  </button>
+                )}
               </div>
             )}
 

@@ -201,6 +201,19 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
     }
   };
 
+  const handleDeleteAgent = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir seu perfil de agente cultural? Esta ação é irreversível e excluirá sua publicação.')) return;
+    try {
+      await agentService.deleteAgent(id);
+      setMyAgent(null);
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+    }
+  };
+
   const handleDeleteRegistration = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja cancelar e excluir esta inscrição permanentemente? Esta ação não pode ser desfeita.')) return;
     try {
@@ -650,6 +663,13 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                        </button>
                        <button onClick={() => setView('profile')} className="px-6 py-3 bg-white text-stone-900 rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg transition-all">
                           Ver Público
+                       </button>
+                       <button 
+                          onClick={() => handleDeleteAgent(myAgent.id)} 
+                          className="p-3 bg-red-50 text-red-500 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm border border-red-100 cursor-pointer"
+                          title="Excluir Perfil de Agente"
+                       >
+                          <Trash2 size={20} />
                        </button>
                     </div>
                  </div>

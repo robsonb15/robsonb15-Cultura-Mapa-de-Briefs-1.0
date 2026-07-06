@@ -108,8 +108,9 @@ export default function AgentMap({ agents, onAgentClick, selectedAgentId, onView
       // Create raw Leaflet Map
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
-        attributionControl: false
-      }).setView([-1.6811, -50.4795], 14);
+        attributionControl: false,
+        tap: false
+      } as any).setView([-1.6811, -50.4795], 14);
 
       // Define Street layer
       const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
