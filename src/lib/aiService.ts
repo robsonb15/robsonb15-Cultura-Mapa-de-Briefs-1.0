@@ -1,21 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import { db, auth } from "./firebase";
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from "firebase/firestore";
 import { sanitizeText } from "./auth-utils";
-
-// Initializing the AI client lazily
-let aiClient: GoogleGenAI | null = null;
-
-const getAiClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not defined in the environment.");
-  }
-  if (!aiClient) {
-    aiClient = new GoogleGenAI({ apiKey });
-  }
-  return aiClient;
-};
 
 /**
  * AI Service with safety controls:
@@ -41,17 +26,25 @@ export const aiService = {
     await this.checkQuota(user.uid);
 
     try {
-      const ai = getAiClient();
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview", 
-        contents: cleanPrompt,
-        config: {
-          systemInstruction: systemContext
-        }
+      // Send secure request to Express backend API proxy
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: cleanPrompt,
+          systemContext: systemContext
+        })
       });
 
-      const text = response.text || '';
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Erro no servidor de IA.");
+      }
+
+      const data = await response.json();
+      const text = data.text || '';
 
       // 4. Sanitize AI output
       const safeText = text
@@ -64,9 +57,9 @@ export const aiService = {
       await this.logUsage(user.uid, taskId, cleanPrompt.length, safeText.length);
 
       return safeText;
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Generation Error:", error);
-      throw new Error("AI service temporarily unavailable. Please try again later.");
+      throw new Error(error.message || "O serviço de IA está temporariamente indisponível. Tente novamente mais tarde.");
     }
   },
 

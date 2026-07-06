@@ -2078,9 +2078,214 @@ export default function AdminPanel() {
                                 </div>
                               </div>
                             </div>
-                         </div>
-                       </div>
-                     ))}
+                          </div>
+
+                          {/* Real-time Visualization & Adjustment Box for Small Banner */}
+                          {banner.image && (
+                            <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 border-t border-stone-200/60 pt-6">
+                              {/* Left: Interactive Preview */}
+                              <div className="lg:col-span-7 space-y-3">
+                                <span className="text-[10px] font-black uppercase text-stone-400 block">Visualização em Tempo Real (Banner)</span>
+                                <div className="relative h-[120px] w-full rounded-2xl overflow-hidden border border-stone-200 shadow-inner bg-stone-950 flex items-center justify-center p-4">
+                                  {/* Simulated Background */}
+                                  <div 
+                                    className="absolute inset-0 z-0 transition-all duration-200"
+                                    style={{
+                                      backgroundImage: `url("${banner.image}")`,
+                                      backgroundSize: 'cover',
+                                      backgroundPosition: `${banner.positionX !== undefined ? banner.positionX : 50}% ${banner.positionY !== undefined ? banner.positionY : 50}%`,
+                                      backgroundRepeat: 'no-repeat',
+                                      transform: `scale(${(banner.zoom !== undefined ? banner.zoom : 100) / 100})`,
+                                      transformOrigin: 'center center'
+                                    }}
+                                  />
+                                  {/* Ambient Overlay to simulate the production CSS */}
+                                  <div className="absolute inset-0 bg-black/20 z-5" />
+
+                                  {/* Simulated Overlay with Title and Subtitle */}
+                                  <div className="relative z-10 text-center text-white space-y-1">
+                                    <h4 className="text-xs font-black uppercase tracking-widest drop-shadow-md text-amber-300">
+                                      {banner.subtitle || "Subtítulo"}
+                                    </h4>
+                                    <h3 className="text-sm font-black drop-shadow-2xl tracking-tighter uppercase italic max-w-md text-center">
+                                      {banner.title || "Título do Banner"}
+                                    </h3>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Right: Controls Panel */}
+                              <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+                                <div className="space-y-4">
+                                  <span className="text-[10px] font-black uppercase text-stone-400 block">Controle da Imagem (Ajuste)</span>
+                                  
+                                  {/* Zoom Control */}
+                                  <div className="space-y-1">
+                                    <div className="flex justify-between items-center text-xs text-stone-600">
+                                      <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Zoom</span>
+                                      <span className="font-mono font-black text-[#0070BA]">{banner.zoom !== undefined ? banner.zoom : 100}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentZoom = banner.zoom !== undefined ? banner.zoom : 100;
+                                          const newVal = Math.max(50, currentZoom - 10);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].zoom = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                      >
+                                        -
+                                      </button>
+                                      <input 
+                                        type="range"
+                                        min="50"
+                                        max="300"
+                                        value={banner.zoom !== undefined ? banner.zoom : 100}
+                                        onChange={e => {
+                                          const newVal = parseInt(e.target.value);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].zoom = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                      />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentZoom = banner.zoom !== undefined ? banner.zoom : 100;
+                                          const newVal = Math.min(300, currentZoom + 10);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].zoom = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-sm cursor-pointer"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* X Position (Lados) */}
+                                  <div className="space-y-1">
+                                    <div className="flex justify-between items-center text-xs text-stone-600">
+                                      <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Mover pros Lados (Horizontal X)</span>
+                                      <span className="font-mono font-black text-[#0070BA]">{banner.positionX !== undefined ? banner.positionX : 50}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentX = banner.positionX !== undefined ? banner.positionX : 50;
+                                          const newVal = Math.max(0, currentX - 5);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionX = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                      >
+                                        ◀
+                                      </button>
+                                      <input 
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={banner.positionX !== undefined ? banner.positionX : 50}
+                                        onChange={e => {
+                                          const newVal = parseInt(e.target.value);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionX = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                      />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentX = banner.positionX !== undefined ? banner.positionX : 50;
+                                          const newVal = Math.min(100, currentX + 5);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionX = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                      >
+                                        ▶
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Y Position (Pra cima / Pra baixo) */}
+                                  <div className="space-y-1">
+                                    <div className="flex justify-between items-center text-xs text-stone-600">
+                                      <span className="font-bold uppercase text-[9px] tracking-wider text-stone-500">Mover pra Cima/Baixo (Vertical Y)</span>
+                                      <span className="font-mono font-black text-[#0070BA]">{banner.positionY !== undefined ? banner.positionY : 50}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentY = banner.positionY !== undefined ? banner.positionY : 50;
+                                          const newVal = Math.max(0, currentY - 5);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionY = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                      >
+                                        ▲
+                                      </button>
+                                      <input 
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={banner.positionY !== undefined ? banner.positionY : 50}
+                                        onChange={e => {
+                                          const newVal = parseInt(e.target.value);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionY = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="flex-1 accent-[#0070BA] h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                                      />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const currentY = banner.positionY !== undefined ? banner.positionY : 50;
+                                          const newVal = Math.min(100, currentY + 5);
+                                          const newBanners = [...config!.siteConfig!.banners];
+                                          newBanners[index].positionY = newVal;
+                                          setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                        }}
+                                        className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs cursor-pointer"
+                                      >
+                                        ▼
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Reset Button */}
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const newBanners = [...config!.siteConfig!.banners];
+                                      newBanners[index].zoom = 100;
+                                      newBanners[index].positionX = 50;
+                                      newBanners[index].positionY = 50;
+                                      setConfig({ ...config!, siteConfig: { ...config!.siteConfig!, banners: newBanners } });
+                                    }}
+                                    className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                  >
+                                    Restaurar Padrão
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                    </div>
                    
                    <button type="submit" className="mt-8 px-10 py-4 bg-[#141414] text-white rounded-2xl font-black text-xs uppercase tracking-tighter flex items-center gap-2">

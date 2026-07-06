@@ -90,14 +90,19 @@ export default function HeroBanner({
                   className={`${banner.bgColor} h-[100px] md:h-[120px] rounded-2xl flex items-center group hover:scale-[1.02] transition-transform relative overflow-hidden shadow-2xl border-2 border-white/10`}
                 >
                    {banner.image ? (
-                     <div className="absolute inset-0 z-0">
-                        <img 
-                          src={banner.image} 
-                          alt={banner.title}
-                          className="w-full h-full object-cover opacity-100 transition-transform duration-500 group-hover:scale-110" 
-                          referrerPolicy="no-referrer"
+                     <div className="absolute inset-0 z-0 overflow-hidden">
+                        <div 
+                          className="w-full h-full transition-all duration-300 group-hover:brightness-110"
+                          style={{
+                            backgroundImage: `url("${banner.image}")`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: `${banner.positionX !== undefined ? banner.positionX : 50}% ${banner.positionY !== undefined ? banner.positionY : 50}%`,
+                            backgroundRepeat: 'no-repeat',
+                            transform: `scale(${(banner.zoom !== undefined ? banner.zoom : 100) / 100})`,
+                            transformOrigin: 'center center'
+                          }}
                         />
-                     </div>
+                      </div>
                    ) : (
                      <div className="flex-1 flex items-center justify-center p-4">
                         <h3 className={`text-sm md:text-base font-black leading-tight uppercase text-center ${banner.textColor}`}>{banner.title}</h3>

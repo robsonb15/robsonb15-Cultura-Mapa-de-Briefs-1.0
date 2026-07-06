@@ -101,6 +101,9 @@ export interface BannerInfo {
   image: string;
   bgColor: string;
   textColor: string;
+  zoom?: number;
+  positionX?: number;
+  positionY?: number;
 }
 
 export interface FooterConfig {

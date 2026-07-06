@@ -130,16 +130,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // On mobile, use redirect to prevent blocked pop-ups
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // On desktop, use popup
+      let currentUser;
+      try {
+        // Attempt popup login first (works beautifully on modern mobile browsers and preserves page state)
         const result = await signInWithPopup(auth, googleProvider);
-        const currentUser = result.user;
-        
+        currentUser = result.user;
+      } catch (popupError: any) {
+        console.warn('Google Sign In with Popup failed, trying Redirect:', popupError);
+        // Fallback to redirect if popup is blocked, cancelled, or on certain mobile environments
+        if (
+          popupError.code === 'auth/popup-blocked' || 
+          popupError.code === 'auth/cancelled-popup-request' ||
+          popupError.code === 'auth/popup-closed-by-user' ||
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        ) {
+          await signInWithRedirect(auth, googleProvider);
+          return; // Redirecting, so page will reload
+        } else {
+          throw popupError;
+        }
+      }
+
+      if (currentUser) {
         // Check if profile exists, if not create it
         const docRef = doc(db, 'users', currentUser.uid);
         let docSnap;
