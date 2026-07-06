@@ -235,28 +235,31 @@ export default function ImageCropperModal({
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-4xl relative z-10 flex flex-col overflow-hidden border border-stone-100"
+        className={`bg-white w-full ${aspectRatio === 1 ? 'max-w-md' : 'max-w-2xl'} rounded-[2.5rem] shadow-4xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden border border-stone-100`}
       >
         {/* Header */}
-        <div className="p-6 md:p-8 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+        <div className="p-6 md:p-8 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 shrink-0">
           <div>
             <h3 className="text-xl md:text-2xl font-black text-stone-900 uppercase tracking-tighter">
-              Ajustar Imagem de Capa
+              {aspectRatio === 1 ? 'Ajustar Foto de Perfil' : 'Ajustar Imagem de Capa'}
             </h3>
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
-              Ajuste para cima, baixo, lados e zoom para encaixar o banner
+              {aspectRatio === 1 
+                ? 'Ajuste a posição e o zoom para enquadrar seu perfil' 
+                : 'Ajuste para cima, baixo, lados e zoom para encaixar o banner'
+              }
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 shadow-md border border-stone-100 transition-all cursor-pointer"
+            className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 shadow-md border border-stone-100 transition-all cursor-pointer shrink-0"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
           {/* Cropper Box */}
           <div className="relative w-full overflow-hidden rounded-2xl bg-stone-950 border border-stone-800 shadow-inner select-none">
             <div
@@ -334,7 +337,7 @@ export default function ImageCropperModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 md:p-8 bg-stone-50/50 border-t border-stone-100 flex justify-end gap-3">
+        <div className="p-6 md:p-8 bg-stone-50/50 border-t border-stone-100 flex justify-end gap-3 shrink-0">
           <button
             type="button"
             onClick={onCancel}
