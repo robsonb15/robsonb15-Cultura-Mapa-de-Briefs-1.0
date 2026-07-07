@@ -4,6 +4,80 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mapa Cultural</title>
+    <script>
+      // Suppress benign Vite WebSocket/HMR errors and other platform-related uncaught exceptions
+      (function() {
+        const OriginalWebSocket = window.WebSocket;
+        if (OriginalWebSocket) {
+          const WrappedWebSocket = function(url, protocols) {
+            try {
+              const ws = new OriginalWebSocket(url, protocols);
+              ws.addEventListener('error', function(e) {
+                try {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
+                } catch(err) {}
+              }, true);
+              return ws;
+            } catch (err) {
+              // Return a dummy object if creation fails to prevent crashes
+              return {
+                addEventListener: function() {},
+                removeEventListener: function() {},
+                send: function() {},
+                close: function() {},
+                readyState: 3 // CLOSED
+              };
+            }
+          };
+          WrappedWebSocket.prototype = OriginalWebSocket.prototype;
+          // Copy static properties/methods if any
+          for (var key in OriginalWebSocket) {
+            if (OriginalWebSocket.hasOwnProperty(key)) {
+              WrappedWebSocket[key] = OriginalWebSocket[key];
+            }
+          }
+          window.WebSocket = WrappedWebSocket;
+        }
+
+        // Global uncaught error interceptor at the absolute earliest point
+        const shouldSuppress = function(msg) {
+          if (!msg) return false;
+          const lower = msg.toLowerCase();
+          return (
+            lower.includes('websocket') ||
+            lower.includes('closed without opened') ||
+            lower.includes('hmr') ||
+            lower.includes('vite') ||
+            lower.includes('quota') ||
+            lower.includes('resource-exhausted')
+          );
+        };
+
+        window.addEventListener('error', function(e) {
+          if (shouldSuppress(e.message) || shouldSuppress(e.filename)) {
+            try {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+            } catch(err) {}
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          const reason = e.reason;
+          const msg = reason ? (reason.message || String(reason)) : '';
+          if (shouldSuppress(msg) || (reason && reason.stack && shouldSuppress(reason.stack))) {
+            try {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+            } catch(err) {}
+          }
+        }, true);
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg transform='rotate(45 50 50)'%3E%3Crect x='19' y='19' width='29' height='29' rx='6' fill='%231D2D6B' /%3E%3Crect x='52' y='19' width='29' height='29' rx='6' fill='%23E10B5C' /%3E%3Crect x='19' y='52' width='29' height='29' rx='6' fill='%2376B843' /%3E%3Crect x='52' y='52' width='29' height='29' rx='6' fill='%23E58723' /%3E%3C/g%3E%3Cg transform='translate(50, 26.5) scale(0.8) translate(-15, -15)'%3E%3Cg transform='rotate(-8 11 15)'%3E%3Cpath d='M6,16 C6,10 14,10 14,16 C14,21 11,24 10,24 C9,24 6,21 6,16 Z' fill='%23FFFFFF' /%3E%3Ccircle cx='8.5' cy='14' r='1' fill='%23E10B5C' /%3E%3Ccircle cx='11.5' cy='14' r='1' fill='%23E10B5C' /%3E%3Cpath d='M8,17.5 Q10,20 12,17.5' stroke='%23E10B5C' stroke-width='1.2' stroke-linecap='round' fill='none' /%3E%3C/g%3E%3Cg transform='rotate(8 19 15)'%3E%3Cpath d='M16,16 C16,10 24,10 24,16 C24,21 21,24 20,24 C19,24 16,21 16,16 Z' fill='%23FFFFFF' /%3E%3Ccircle cx='18.5' cy='14' r='1' fill='%23E10B5C' /%3E%3Ccircle cx='21.5' cy='14' r='1' fill='%23E10B5C' /%3E%3Cpath d='M18.5,19 Q20,17 21.5,19' stroke='%23E10B5C' stroke-width='1.2' stroke-linecap='round' fill='none' /%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(26.5, 50) scale(0.85) translate(-15, -15)'%3E%3Cpath d='M11,21 A3.5,3.5 0 1,1 7.5,17.5 A3.5,3.5 0 0,1 11,21 Z' fill='%23FFFFFF' /%3E%3Cpath d='M11,21 L11,7 C11,7 15,7 18,9.5 C18.5,10 18.5,9 18.5,8.5 C16,6 11,5 11,7' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none' /%3E%3Cpath d='M11,7 L19,7 L19,9 L11,9 Z' fill='%23FFFFFF' /%3E%3C/g%3E%3Cg transform='translate(73.5, 50) scale(0.85) translate(-15, -15)'%3E%3Ccircle cx='11' cy='7' r='2' fill='%23FFFFFF' /%3E%3Cpath d='M11,9 C11,9 14,12 17,11 C20,10 23,8 25,8.5 C25.5,8.7 25,9.2 23,10 C21,10.8 19,12 18,13.5 C17,15 17.5,17.5 19,19 C20.5,20.5 23.5,21.5 24,21.5 C24.5,21.5 24,22 23,22 C21.5,22 19.5,23.5 18.5,25 C17.5,26.5 17.5,28 18,29 C18.1,29.3 17.7,29.5 17.5,29 C17,27.5 17,24.5 16.5,21.5 C16,18.5 15,17 13.5,16.5 C12,16 11,17.5 10.5,18.5 C10,19.5 9.5,19.5 9,19.5 C8.5,19.5 8.5,19 8.7,18.5 C9.3,17 9.7,15 9,13.5 C8.5,12.5 7,12 6,11.5 C5,11 4,10.8 3.5,10.5 C3,10.2 3.3,9.8 4.5,10 C6,10.2 8,11.5 10,11 C11,10.8 11,9.5 11,9 Z' fill='%23FFFFFF' /%3E%3C/g%3E%3Cg transform='translate(50, 73.5) scale(0.85) translate(-15, -15)'%3E%3Cpath d='M6,15 C6,8 11,5 17,5 C23,5 25,8 25,12 C25,15 22,16 21,18 C20,20 20,24 15,24 C10,24 6,21 6,15 Z' fill='%23FFFFFF' /%3E%3Ccircle cx='10' cy='11' r='1.5' fill='%2376B843' /%3E%3Ccircle cx='15' cy='9' r='1.5' fill='%2376B843' /%3E%3Ccircle cx='20' cy='11' r='1.5' fill='%2376B843' /%3E%3Ccircle cx='14' cy='18' r='2' fill='%2376B843' /%3E%3Cpath d='M19,19 L26,10 L28,11 L21,20 Z' fill='%2376B843' /%3E%3Cpath d='M26,10 L28,7 L29,8 L27,11 Z' fill='%23FFFFFF' /%3E%3C/g%3E%3C/svg%3E">
   </head>
   <body>

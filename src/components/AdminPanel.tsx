@@ -48,6 +48,55 @@ import html2canvas from 'html2canvas';
 import { RegistrationSummaryPDF } from './RegistrationSummaryPDF';
 import { useRef } from 'react';
 
+const isOpportunityOpen = (item: any): boolean => {
+  if (!item) return false;
+  const now = new Date();
+
+  // 1. If timeline phases exist, check if an "Inscrição/Inscrições" phase is currently active or end date is in the future
+  if (item.timelinePhases && item.timelinePhases.length > 0) {
+    const inscriptionPhases = item.timelinePhases.filter((p: any) => 
+      p.name && (p.name.toLowerCase().includes('inscri') || p.name.toLowerCase().includes('aberta'))
+    );
+
+    if (inscriptionPhases.length > 0) {
+      return inscriptionPhases.some((p: any) => {
+        const start = p.startDate ? new Date(p.startDate) : null;
+        const end = p.endDate ? new Date(p.endDate) : null;
+
+        const isStartValid = start && !isNaN(start.getTime());
+        const isEndValid = end && !isNaN(end.getTime());
+
+        if (isStartValid && isEndValid) {
+          return now >= start && now <= end;
+        } else if (isStartValid) {
+          return now >= start;
+        } else if (isEndValid) {
+          return now <= end;
+        }
+        return false;
+      });
+    }
+  }
+
+  // 2. Check the standard startDate and deadline fields
+  const start = item.startDate ? new Date(item.startDate) : null;
+  const deadline = item.deadline ? new Date(item.deadline) : null;
+
+  const isStartValid = start && !isNaN(start.getTime());
+  const isDeadlineValid = deadline && !isNaN(deadline.getTime());
+
+  if (isStartValid && isDeadlineValid) {
+    return now >= start && now <= deadline;
+  } else if (isStartValid) {
+    return now >= start;
+  } else if (isDeadlineValid) {
+    return now <= deadline;
+  }
+
+  // 3. Fallback to status field
+  return item.status === 'open';
+};
+
 export default function AdminPanel() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [agents, setAgents] = useState<CulturalAgent[]>([]);
@@ -1565,10 +1614,10 @@ export default function AdminPanel() {
                             <div className="flex justify-between items-start mb-6">
                               <div className="flex-1 min-w-0 pr-4">
                                 <div className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase mb-2 ${
-                                  opp.status === 'open' ? 'bg-green-100 text-green-600' : 
+                                  isOpportunityOpen(opp) ? 'bg-green-100 text-green-600' : 
                                   opp.status === 'closed' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
                                 }`}>
-                                  {opp.status === 'open' ? 'Inscrições Abertas' : 
+                                  {isOpportunityOpen(opp) ? 'Inscrições Abertas' : 
                                   opp.status === 'closed' ? 'Encerradas' : 'Em breve'}
                                 </div>
                                 <h4 className="text-lg font-black text-stone-900 uppercase leading-tight truncate">{opp.name}</h4>

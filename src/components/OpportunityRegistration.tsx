@@ -126,6 +126,42 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
 
   const [formData, setFormData] = useState<RegistrationData>(initialData);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+
+  const agentDisplayName = agent.contactInfo?.email === 'robsonstudio15hd@gmail.com' || agent.name === 'AGENTE MAPA CULTURAL' || agent.name.includes('MAPA CULTURAL')
+    ? 'ROBSON FARIAS'
+    : agent.socialName || agent.name;
+
+  // Sync profileImagePreview with actual file data or agent
+  useEffect(() => {
+    if (formData.identification.profileImage) {
+      if (
+        formData.identification.profileImage.startsWith('http') || 
+        formData.identification.profileImage.startsWith('blob:') || 
+        formData.identification.profileImage.startsWith('data:')
+      ) {
+        setProfileImagePreview(formData.identification.profileImage);
+      } else if (agent?.images?.profile) {
+        setProfileImagePreview(agent.images.profile);
+      }
+    } else if (agent?.images?.profile) {
+      setProfileImagePreview(agent.images.profile);
+    }
+  }, [formData.identification.profileImage, agent]);
+
+  // Sync profileImage field if missing but agent has one
+  useEffect(() => {
+    if (agent?.images?.profile && !formData.identification.profileImage) {
+      setFormData(prev => ({
+        ...prev,
+        identification: {
+          ...prev.identification,
+          profileImage: agent.images.profile
+        }
+      }));
+    }
+  }, [agent]);
 
   // Load from localStorage on mount if not editing existing registration
   useEffect(() => {
@@ -638,7 +674,7 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
                 <div className="bg-white border border-stone-100 rounded-xl p-8 flex items-center gap-8 shadow-sm group">
                    <div className="relative">
                      <img 
-                        src={formData.identification.profileImage || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=200"} 
+                        src={profileImagePreview || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=200"} 
                         className="w-32 h-32 rounded-xl object-cover shadow-inner"
                      />
                      <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-lg shadow-md">
@@ -647,23 +683,40 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
                    </div>
                    <div className="flex-1 space-y-1">
                       <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest">Agente responsável</h3>
-                      <p className="text-xl font-black text-stone-900 uppercase tracking-tight">{agent.name}</p>
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        id="profile-upload"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload('identification', 'profileImage', file.name);
-                        }}
-                      />
-                      <button 
-                        onClick={() => document.getElementById('profile-upload')?.click()}
-                        className={`text-stone-800 text-[11px] font-black mt-4 flex items-center gap-2 hover:text-red-600 transition-colors uppercase tracking-tight bg-stone-50 px-4 py-2 rounded-lg border border-stone-100 ${formData.identification.profileImage ? 'text-emerald-600 border-emerald-100' : ''}`}
-                      >
-                         {formData.identification.profileImage ? <CheckCircle2 size={12} className="text-emerald-500" /> : <Edit2 size={12} className="text-stone-900" />}
-                         {formData.identification.profileImage ? 'Imagem de perfil adicionada' : 'Adicionar imagem de perfil'} <span className="text-red-500 font-bold ml-1 lowercase italic">*obrigatório</span>
-                      </button>
+                      <p className="text-xl font-black text-stone-900 uppercase tracking-tight">{agentDisplayName}</p>
+                      
+                      {formData.identification.profileImage ? (
+                        <div 
+                          className="text-emerald-600 border-emerald-100 text-[11px] font-black mt-4 flex items-center gap-2 uppercase tracking-tight bg-stone-50 px-4 py-2 rounded-lg border w-fit"
+                        >
+                           <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                           Imagem de perfil adicionada <span className="text-red-500 font-bold ml-1 lowercase italic">*obrigatório</span>
+                        </div>
+                      ) : (
+                        <>
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            ref={profileImageInputRef}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const localUrl = URL.createObjectURL(file);
+                                setProfileImagePreview(localUrl);
+                                handleFileUpload('identification', 'profileImage', file.name);
+                              }
+                            }}
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => profileImageInputRef.current?.click()}
+                            className="text-stone-800 text-[11px] font-black mt-4 flex items-center gap-2 hover:text-red-600 transition-colors uppercase tracking-tight bg-stone-50 px-4 py-2 rounded-lg border border-stone-100"
+                          >
+                             <Edit2 size={12} className="text-stone-900" />
+                             Adicionar imagem de perfil <span className="text-red-500 font-bold ml-1 lowercase italic">*obrigatório</span>
+                          </button>
+                        </>
+                      )}
                    </div>
                 </div>
 

@@ -52,6 +52,55 @@ interface UserDashboardProps {
 
 type DashboardTab = 'dashboard' | 'my_profile' | 'my_agents' | 'my_spaces' | 'my_events' | 'my_opportunities' | 'my_published_opportunities' | 'my_projects' | 'settings';
 
+const isOpportunityOpen = (item: any): boolean => {
+  if (!item) return false;
+  const now = new Date();
+
+  // 1. If timeline phases exist, check if an "Inscrição/Inscrições" phase is currently active or end date is in the future
+  if (item.timelinePhases && item.timelinePhases.length > 0) {
+    const inscriptionPhases = item.timelinePhases.filter((p: any) => 
+      p.name && (p.name.toLowerCase().includes('inscri') || p.name.toLowerCase().includes('aberta'))
+    );
+
+    if (inscriptionPhases.length > 0) {
+      return inscriptionPhases.some((p: any) => {
+        const start = p.startDate ? new Date(p.startDate) : null;
+        const end = p.endDate ? new Date(p.endDate) : null;
+
+        const isStartValid = start && !isNaN(start.getTime());
+        const isEndValid = end && !isNaN(end.getTime());
+
+        if (isStartValid && isEndValid) {
+          return now >= start && now <= end;
+        } else if (isStartValid) {
+          return now >= start;
+        } else if (isEndValid) {
+          return now <= end;
+        }
+        return false;
+      });
+    }
+  }
+
+  // 2. Check the standard startDate and deadline fields
+  const start = item.startDate ? new Date(item.startDate) : null;
+  const deadline = item.deadline ? new Date(item.deadline) : null;
+
+  const isStartValid = start && !isNaN(start.getTime());
+  const isDeadlineValid = deadline && !isNaN(deadline.getTime());
+
+  if (isStartValid && isDeadlineValid) {
+    return now >= start && now <= deadline;
+  } else if (isStartValid) {
+    return now >= start;
+  } else if (isDeadlineValid) {
+    return now <= deadline;
+  }
+
+  // 3. Fallback to status field
+  return item.status === 'open';
+};
+
 export default function UserDashboard({ setView, setSelectedContent, hasAgent, initialCreateType, clearCreateType }: UserDashboardProps) {
   const { profile, user, logout, refreshProfile, appConfig } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
@@ -978,9 +1027,9 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                           <div className="flex gap-4 mt-2">
                              <span className="text-[10px] font-black text-stone-300 uppercase tracking-tighter">ID: {item.id.slice(0, 8).toUpperCase()}</span>
                              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${
-                               item.status === 'open' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                               isOpportunityOpen(item) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
                              }`}>
-                               {item.status === 'open' ? 'Aberto' : 'Encerrado'}
+                               {isOpportunityOpen(item) ? 'Aberto' : 'Encerrado'}
                              </span>
                           </div>
                        </div>

@@ -165,6 +165,52 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
     };
   };
 
+  const isOpportunityOpen = (item: any): boolean => {
+    if (!item) return false;
+    const now = new Date();
+
+    if (item.timelinePhases && item.timelinePhases.length > 0) {
+      const inscriptionPhases = item.timelinePhases.filter((p: any) => 
+        p.name && (p.name.toLowerCase().includes('inscri') || p.name.toLowerCase().includes('aberta'))
+      );
+
+      if (inscriptionPhases.length > 0) {
+        return inscriptionPhases.some((p: any) => {
+          const start = p.startDate ? new Date(p.startDate) : null;
+          const end = p.endDate ? new Date(p.endDate) : null;
+
+          const isStartValid = start && !isNaN(start.getTime());
+          const isEndValid = end && !isNaN(end.getTime());
+
+          if (isStartValid && isEndValid) {
+            return now >= start && now <= end;
+          } else if (isStartValid) {
+            return now >= start;
+          } else if (isEndValid) {
+            return now <= end;
+          }
+          return false;
+        });
+      }
+    }
+
+    const start = item.startDate ? new Date(item.startDate) : null;
+    const deadline = item.deadline ? new Date(item.deadline) : null;
+
+    const isStartValid = start && !isNaN(start.getTime());
+    const isDeadlineValid = deadline && !isNaN(deadline.getTime());
+
+    if (isStartValid && isDeadlineValid) {
+      return now >= start && now <= deadline;
+    } else if (isStartValid) {
+      return now >= start;
+    } else if (isDeadlineValid) {
+      return now <= deadline;
+    }
+
+    return item.status === 'open';
+  };
+
   const downloadFile = async (url: string, defaultName: string) => {
     if (!url || url === '#' || url === '') return;
 
@@ -469,10 +515,10 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
                       <p className="text-stone-400 text-sm font-medium">Selecione uma opção abaixo e clique no botão para se inscrever</p>
                     </div>
                     {content.status && (
-                      <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-tight ${content.status === 'open' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                         STATUS: {content.status === 'open' ? 'Inscrições Abertas' : 'Encerrado'}
-                      </div>
-                    )}
+                       <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-tight ${isOpportunityOpen(content) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                          STATUS: {isOpportunityOpen(content) ? 'Inscrições Abertas' : 'Encerrado'}
+                       </div>
+                     )}
 
                   </div>
                   

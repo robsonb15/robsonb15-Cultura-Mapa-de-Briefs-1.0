@@ -75,7 +75,8 @@ function AppContent() {
     if (user) {
       agentService.getAgent(user.uid).then((agent) => {
         const isDeleted = localStorage.getItem(`deleted_agent_${user.uid}`) === 'true';
-        if (!agent && !isDeleted && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
+        const forceBootstrap = typeof window !== 'undefined' && window.location.search.includes('bootstrap=true');
+        if (!agent && !isDeleted && forceBootstrap && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
           const robsonAgent: Omit<CulturalAgent, 'createdAt' | 'updatedAt'> = {
             id: user.uid,
             name: "ROBSON FARIAS PANTOJA",
@@ -118,7 +119,21 @@ function AppContent() {
             setMyAgent(robsonAgent as any);
           });
         } else {
-          setMyAgent(agent);
+          let cleanAgent = agent;
+          if (agent && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com') && (agent.name === 'AGENTE MAPA CULTURAL' || !agent.images?.profile || agent.images.profile.includes('placeholder') || agent.name.includes('MAPA CULTURAL'))) {
+            cleanAgent = {
+              ...agent,
+              name: "ROBSON FARIAS PANTOJA",
+              socialName: "ROBSON FARIAS",
+              images: {
+                ...agent.images,
+                profile: "https://i.postimg.cc/Zq16HdkJ/pefil.png",
+                banner: "https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg"
+              }
+            };
+            agentService.updateAgent(user.uid, cleanAgent).catch(e => console.warn("Error updating Robson's agent in DB:", e));
+          }
+          setMyAgent(cleanAgent);
         }
       });
     } else {
@@ -126,7 +141,25 @@ function AppContent() {
     }
 
     const unsubscribeAgents = agentService.subscribeToAgents((data) => {
-      setAgents(data);
+      let cleaned = data;
+      if (user && (user.email === 'robsonstudio15hd@gmail.com' || user.email === 'portalseculte@gmail.com')) {
+        cleaned = data.map(a => {
+          if (a.id === user.uid && (a.name === 'AGENTE MAPA CULTURAL' || a.name.includes('MAPA CULTURAL'))) {
+            return {
+              ...a,
+              name: "ROBSON FARIAS PANTOJA",
+              socialName: "ROBSON FARIAS",
+              images: {
+                ...a.images,
+                profile: "https://i.postimg.cc/Zq16HdkJ/pefil.png",
+                banner: "https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg"
+              }
+            };
+          }
+          return a;
+        });
+      }
+      setAgents(cleaned);
       setLoading(false);
     });
 
