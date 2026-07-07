@@ -26,6 +26,43 @@ import html2canvas from 'html2canvas';
 import { RegistrationSummaryPDF } from './RegistrationSummaryPDF';
 import { EvaluationsPrintPDF } from './EvaluationsPrintPDF';
 
+const formatToBrazilianDateTime = (dateStr: string | undefined | null): string => {
+  if (!dateStr) return 'Data a definir';
+  if (/^\d{2}[\/\-]\d{2}[\/\-]\d{4}/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}))?/);
+      if (match) {
+        const [_, year, month, day, hasTime, hour, minute] = match;
+        if (hasTime) {
+          return `${day}/${month}/${year} às ${hour}:${minute}`;
+        }
+        return `${day}/${month}/${year}`;
+      }
+      return dateStr;
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    const hasTime = dateStr.includes('T') || (dateStr.includes(' ') && dateStr.match(/\d{2}:\d{2}/));
+    
+    if (hasTime) {
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} às ${hour}:${minute}`;
+    }
+    return `${day}/${month}/${year}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 interface RegistrationTrackingProps {
   registration: OpportunityRegistration;
   opportunity?: any;
@@ -169,47 +206,81 @@ export default function RegistrationTracking({ registration, opportunity, agent,
       name: 'Fase de inscrições', 
       startDate: '18/02/2025', 
       endDate: '12/03/2025', 
-      status: 'completed',
-      resultDescription: 'relevância cultural'
+      status: 'completed'
     },
     { 
       id: '2', 
       name: 'Etapa de Avaliação de Mérito Cultural', 
       startDate: '25/03/2025', 
       endDate: '10/04/2025', 
-      status: 'completed',
-      resultDescription: 'mérito positivo'
+      status: 'active'
     },
     { 
       id: '3', 
       name: 'Etapa de Habilitação - Anexos', 
       startDate: '19/12/2025', 
       endDate: '25/12/2025', 
-      status: 'completed',
-      resultDescription: 'positivo'
+      status: 'pending'
     },
     { 
       id: '4', 
       name: 'Etapa de Habilitação - Avaliação', 
       startDate: '29/12/2025', 
       endDate: '13/01/2027', 
-      status: 'completed',
-      resultDescription: 'Habilitação - Avaliação deferido'
+      status: 'pending'
     },
     { 
       id: '5', 
       name: 'Publicação final do resultado', 
       startDate: '31/01/2027', 
       endDate: '31/01/2027', 
-      status: 'completed',
-      resultDescription: 'final do resultado deferido'
+      status: 'pending'
     },
   ];
 
   // Map phases and ensure evaluations are populated
-  const rawPhases = registration.phases && registration.phases.length > 0 
-    ? registration.phases 
-    : defaultPhases;
+  let rawPhases: RegistrationPhase[] = [];
+  
+  if (opportunity && opportunity.timelinePhases && opportunity.timelinePhases.length > 0) {
+    rawPhases = opportunity.timelinePhases.map((tp: any, idx: number) => {
+      const existingPhase = registration.phases?.[idx] || 
+                            registration.phases?.find((p: any) => p.name?.toLowerCase() === tp.name?.toLowerCase());
+      
+      let status: 'completed' | 'active' | 'pending' = 'pending';
+      if (existingPhase?.status) {
+        status = existingPhase.status as any;
+      } else {
+        const now = new Date();
+        const start = tp.startDate ? new Date(tp.startDate) : null;
+        const end = tp.endDate ? new Date(tp.endDate) : null;
+        if (start && !isNaN(start.getTime()) && end && !isNaN(end.getTime())) {
+          if (now >= start && now <= end) {
+            status = 'active';
+          } else if (now > end) {
+            status = 'completed';
+          } else {
+            status = 'pending';
+          }
+        } else if (idx === 0) {
+          status = 'completed';
+        }
+      }
+
+      return {
+        id: existingPhase?.id || String(idx + 1),
+        name: tp.name || `Fase ${idx + 1}`,
+        startDate: tp.startDate || '',
+        endDate: tp.endDate || '',
+        status: status,
+        resultDescription: existingPhase?.resultDescription || '',
+        evaluations: existingPhase?.evaluations || []
+      };
+    });
+  } else if (registration.phases && registration.phases.length > 0) {
+    rawPhases = registration.phases;
+  } else {
+    rawPhases = defaultPhases;
+  }
 
   const phases = rawPhases.map(phase => ({
     ...phase,
@@ -348,7 +419,7 @@ export default function RegistrationTracking({ registration, opportunity, agent,
                       {phase.name}
                     </h3>
                     <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">
-                      de {phase.startDate} a {phase.endDate}
+                      de {formatToBrazilianDateTime(phase.startDate)} a {formatToBrazilianDateTime(phase.endDate)}
                     </p>
 
                     {phase.resultDescription && (
@@ -587,9 +658,7 @@ export default function RegistrationTracking({ registration, opportunity, agent,
                     <h4 className="text-3xl font-black uppercase tracking-tighter italic text-stone-100">
                       {selectedPhaseForDetails.resultDescription}
                     </h4>
-                    <p className="text-xs font-bold text-[#0070BA] uppercase tracking-widest mt-1">
-                      Fase concluída com êxito
-                    </p>
+                    {/* Removed Fase concluída com êxito element */}
                   </div>
                   
                   {selectedPhaseForDetails.evaluations && selectedPhaseForDetails.evaluations.length > 0 && (

@@ -48,6 +48,43 @@ import html2canvas from 'html2canvas';
 import { RegistrationSummaryPDF } from './RegistrationSummaryPDF';
 import { useRef } from 'react';
 
+const formatToBrazilianDateTime = (dateStr: string | undefined | null): string => {
+  if (!dateStr) return 'Não definida';
+  if (/^\d{2}[\/\-]\d{2}[\/\-]\d{4}/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}))?/);
+      if (match) {
+        const [_, year, month, day, hasTime, hour, minute] = match;
+        if (hasTime) {
+          return `${day}/${month}/${year} às ${hour}:${minute}`;
+        }
+        return `${day}/${month}/${year}`;
+      }
+      return dateStr;
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    const hasTime = dateStr.includes('T') || (dateStr.includes(' ') && dateStr.match(/\d{2}:\d{2}/));
+    
+    if (hasTime) {
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} às ${hour}:${minute}`;
+    }
+    return `${day}/${month}/${year}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const isOpportunityOpen = (item: any): boolean => {
   if (!item) return false;
   const now = new Date();
@@ -128,7 +165,40 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (evaluatingRegistration) {
-      if (evaluatingRegistration.phases && evaluatingRegistration.phases.length > 0) {
+      const opp = opportunities.find(o => o.id === evaluatingRegistration.opportunityId);
+      if (opp && opp.timelinePhases && opp.timelinePhases.length > 0) {
+        const opportunityPhases = opp.timelinePhases.map((tp, idx) => {
+          const existingPhase = evaluatingRegistration.phases?.find(p => p.name?.toLowerCase() === tp.name?.toLowerCase()) ||
+                               evaluatingRegistration.phases?.[idx];
+          
+          let status: 'completed' | 'active' | 'pending' = 'pending';
+          const now = new Date();
+          const start = tp.startDate ? new Date(tp.startDate) : null;
+          const end = tp.endDate ? new Date(tp.endDate) : null;
+          if (start && !isNaN(start.getTime()) && end && !isNaN(end.getTime())) {
+            if (now >= start && now <= end) {
+              status = 'active';
+            } else if (now > end) {
+              status = 'completed';
+            } else {
+              status = 'pending';
+            }
+          } else if (idx === 0) {
+            status = 'completed';
+          }
+
+          return {
+            id: existingPhase?.id || String(idx + 1),
+            name: tp.name || `Fase ${idx + 1}`,
+            startDate: tp.startDate || '',
+            endDate: tp.endDate || '',
+            status: status,
+            resultDescription: existingPhase?.resultDescription || (idx === 1 ? 'Em Análise' : ''),
+            evaluations: existingPhase?.evaluations || []
+          };
+        });
+        setPhasesList(opportunityPhases);
+      } else if (evaluatingRegistration.phases && evaluatingRegistration.phases.length > 0) {
         setPhasesList(evaluatingRegistration.phases);
       } else {
         setPhasesList([
@@ -173,7 +243,7 @@ export default function AdminPanel() {
       }
       setSelectedPhaseIndex(0);
     }
-  }, [evaluatingRegistration]);
+  }, [evaluatingRegistration, opportunities]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isGenerating, setIsGenerating] = useState<string | null>(null); // Registration ID
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -843,66 +913,34 @@ export default function AdminPanel() {
                             {/* Phase Name Input */}
                             <div className="md:col-span-3 space-y-1">
                               <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest pl-1">Nome da Fase</label>
-                              <input 
-                                type="text"
-                                value={phase.name || ''}
-                                onChange={(e) => {
-                                  const newList = [...phasesList];
-                                  newList[idx].name = e.target.value;
-                                  setPhasesList(newList);
-                                }}
-                                className="w-full bg-stone-50 border-stone-200 rounded-xl px-4 py-2 text-xs text-stone-900 font-bold outline-none focus:ring-1 focus:ring-[#0070BA]"
-                                placeholder="EX: Fase de Análise Técnica"
-                              />
+                              <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-2.5 text-xs text-stone-900 font-black min-h-[38px] flex items-center">
+                                {phase.name || ''}
+                              </div>
                             </div>
 
                             {/* Date Inputs */}
                             <div className="md:col-span-2 space-y-1">
                               <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest pl-1">Data Início</label>
-                              <input 
-                                type="text"
-                                value={phase.startDate || ''}
-                                onChange={(e) => {
-                                  const newList = [...phasesList];
-                                  newList[idx].startDate = e.target.value;
-                                  setPhasesList(newList);
-                                }}
-                                className="w-full bg-stone-50 border-stone-200 rounded-xl px-4 py-2 text-xs text-stone-950 font-medium outline-none text-center"
-                                placeholder="DD/MM/AAAA"
-                              />
+                              <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-2.5 text-xs text-stone-950 font-black text-center min-h-[38px] flex items-center justify-center">
+                                {formatToBrazilianDateTime(phase.startDate)}
+                              </div>
                             </div>
                             <div className="md:col-span-2 space-y-1">
                               <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest pl-1">Data Fim</label>
-                              <input 
-                                type="text"
-                                value={phase.endDate || ''}
-                                onChange={(e) => {
-                                  const newList = [...phasesList];
-                                  newList[idx].endDate = e.target.value;
-                                  setPhasesList(newList);
-                                }}
-                                className="w-full bg-stone-50 border-stone-200 rounded-xl px-4 py-2 text-xs text-stone-950 font-medium outline-none text-center"
-                                placeholder="DD/MM/AAAA"
-                              />
+                              <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-2.5 text-xs text-stone-950 font-black text-center min-h-[38px] flex items-center justify-center">
+                                {formatToBrazilianDateTime(phase.endDate)}
+                              </div>
                             </div>
 
                             {/* Status */}
                             <div className="md:col-span-2 space-y-1">
                               <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest pl-1">Status</label>
-                              <select 
-                                value={phase.status || 'pending'}
-                                onChange={(e) => {
-                                  const newList = [...phasesList];
-                                  newList[idx].status = e.target.value;
-                                  setPhasesList(newList);
-                                }}
-                                className="w-full bg-stone-50 border-stone-200 rounded-xl px-4 py-2 text-xs text-stone-900 font-bold outline-none"
-                              >
-                                <option value="pending">Pendente</option>
-                                <option value="active">Em Andamento</option>
-                                <option value="completed">Realizada</option>
-                                <option value="not_selected">Não Habilitado</option>
-                              </select>
+                              <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-2.5 text-xs text-center min-h-[38px] flex items-center justify-center">
+                                {phase.status === 'completed' && <span className="text-red-600 font-black uppercase tracking-wider text-[10px] bg-red-50 px-3 py-1 rounded-full border border-red-100">Realizada</span>}
+                                {phase.status === 'active' && <span className="text-emerald-600 font-black uppercase tracking-wider text-[10px] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 animate-pulse">Em Andamento</span>}
+                                {phase.status === 'pending' && <span className="text-stone-500 font-black uppercase tracking-wider text-[10px] bg-stone-100 px-3 py-1 rounded-full border border-stone-200">Pendente</span>}
+                                {phase.status === 'not_selected' && <span className="text-amber-600 font-black uppercase tracking-wider text-[10px] bg-amber-50 px-3 py-1 rounded-full border border-amber-100">Não Habilitado</span>}
+                              </div>
                             </div>
 
                             {/* Actions / Select for details */}
