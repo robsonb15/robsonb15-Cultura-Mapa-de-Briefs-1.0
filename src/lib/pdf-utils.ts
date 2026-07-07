@@ -22,7 +22,7 @@ export const generateAgentReport = async (agent: CulturalAgent, isAdminView = fa
       <div style="border: 2px solid #5A5A40; padding: 8mm; box-sizing: border-box; min-height: 277mm; position: relative; background: white;">
         ${html}
         <div style="position: absolute; bottom: 8mm; left: 8mm; right: 8mm; border-top: 1px solid #E7E5E4; padding-top: 3mm; display: flex; justify-content: space-between; align-items: center;">
-           <p style="font-size: 6pt; color: #A8A29E; text-transform: uppercase; font-weight: 700; margin: 0;">© Mapa Cultural Breves - Sistema de Gestão Cultural</p>
+           <p style="font-size: 6pt; color: #A8A29E; text-transform: uppercase; font-weight: 700; margin: 0;">© Mapa Cultural (Padrão) - Sistema de Gestão Cultural</p>
            <p style="font-size: 6pt; color: #5A5A40; font-weight: 900; text-transform: uppercase; margin: 0;">Página ${pageNum}</p>
         </div>
       </div>
@@ -39,7 +39,7 @@ export const generateAgentReport = async (agent: CulturalAgent, isAdminView = fa
   await renderSection(`
     <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #5A5A40; padding-bottom: 5mm; margin-bottom: 8mm;">
       <div>
-        <h1 style="font-size: 24pt; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: -1px;">Mapa Cultural Breves</h1>
+        <h1 style="font-size: 24pt; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: -1px;">Mapa Cultural (Padrão)</h1>
         <p style="font-size: 9pt; font-weight: 700; color: #5A5A40; margin: 1mm 0 0 0; text-transform: uppercase; letter-spacing: 2px;">
           ${isAdminView ? 'Dossiê Administrativo de Agente' : 'Relatório Oficial de Agente'}
         </p>

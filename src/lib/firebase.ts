@@ -26,9 +26,9 @@ async function testConnection() {
     }
     
     if (error.message && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The client is reporting as offline.");
+      console.warn("Please check your Firebase configuration. The client is reporting as offline.");
     } else {
-      console.error("Firestore connectivity check failed:", error);
+      console.warn("Firestore connectivity check status (possible quota limit or offline mode):", error.message || error);
     }
   }
 }

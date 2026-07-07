@@ -155,7 +155,7 @@ export default function AdminPanel() {
         const data = configDoc.data() as AppConfig;
         if (!data.siteConfig) {
           data.siteConfig = {
-            siteName: 'Mapa Cultural',
+            siteName: 'Mapa Cultural (Padrão)',
             logoUrl: data.logoUrl || '',
             heroTitle: 'Boas-vindas ao Mapa Cultural',
             heroSubtitle: 'O Mapa Cultural é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.',
@@ -195,8 +195,8 @@ export default function AdminPanel() {
           data.siteConfig.footer.addressText = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
           data.siteConfig.footer.address = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
         }
-        if (data.siteConfig && (!data.siteConfig.siteName || data.siteConfig.siteName.includes('Breves'))) {
-          data.siteConfig.siteName = 'Mapa Cultural';
+        if (data.siteConfig && (!data.siteConfig.siteName || data.siteConfig.siteName.includes('Breves') || data.siteConfig.siteName === 'Mapa Cultural')) {
+          data.siteConfig.siteName = 'Mapa Cultural (Padrão)';
         }
         if (data.siteConfig && data.siteConfig.logoScale === undefined) {
           data.siteConfig.logoScale = 1;
@@ -296,7 +296,7 @@ export default function AdminPanel() {
           logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
           adminEmails: ['robsonstudio15hd@gmail.com', 'portalseculte@gmail.com'],
           siteConfig: {
-            siteName: 'Mapa Cultural',
+            siteName: 'Mapa Cultural (Padrão)',
             logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
             heroBannerImage: 'https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg',
             featuredTitle: 'Em destaque',
@@ -1254,60 +1254,83 @@ export default function AdminPanel() {
                         </label>
                       </div>
                       {(config?.siteConfig?.logoUrl || config?.logoUrl) && (
-                        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-4">
-                          <img 
-                            src={config?.siteConfig?.logoUrl || config?.logoUrl} 
-                            alt="Logotipo Atual" 
-                            className="h-12 w-auto object-contain bg-white rounded-lg p-1"
-                          />
-                          <div>
-                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-tighter">Pré-visualização</p>
-                            <p className="text-xs text-stone-600 truncate max-w-[200px]">{config?.siteConfig?.logoUrl || config?.logoUrl}</p>
+                        <div className="p-5 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="h-16 w-24 bg-white rounded-xl p-2 border border-stone-100 flex items-center justify-center overflow-hidden">
+                              <img 
+                                src={config?.siteConfig?.logoUrl || config?.logoUrl} 
+                                alt="Logotipo Atual" 
+                                className="object-contain max-h-full max-w-full origin-center transition-transform duration-100"
+                                style={{ 
+                                  transform: `scale(${config?.siteConfig?.logoScale || 1})`
+                                }}
+                              />
+                            </div>
+                            <div className="flex-grow min-w-0">
+                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-tighter">Pré-visualização</p>
+                              <p className="text-xs text-stone-600 truncate max-w-[150px] font-mono">{config?.siteConfig?.logoUrl || config?.logoUrl}</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => setConfig(prev => prev ? ({ ...prev, logoUrl: '', siteConfig: { ...prev.siteConfig!, logoUrl: '' } }) : null)}
+                              className="p-2.5 bg-stone-100 hover:bg-red-50 hover:text-red-500 text-stone-400 rounded-xl transition-all"
+                              title="Remover Logotipo"
+                            >
+                              <X size={16} />
+                            </button>
                           </div>
-                          <button 
-                            onClick={() => setConfig(prev => prev ? ({ ...prev, logoUrl: '', siteConfig: { ...prev.siteConfig!, logoUrl: '' } }) : null)}
-                            className="ml-auto p-2 text-stone-400 hover:text-red-500 transition-colors"
-                          >
-                            <X size={16} />
-                          </button>
+
+                          <div className="border-t border-stone-150 pt-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-[#5A5A40] uppercase tracking-tighter">Controle de Tamanho da Logo (Escala)</span>
+                              <span className="text-xs font-black text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-100">
+                                {Math.round((config?.siteConfig?.logoScale || 1) * 100)}%
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setConfig(prev => {
+                                  if (!prev) return null;
+                                  const currentScale = prev.siteConfig?.logoScale || 1;
+                                  return { ...prev, siteConfig: { ...prev.siteConfig!, logoScale: Math.max(0.3, currentScale - 0.05) } };
+                                })}
+                                className="w-9 h-9 bg-white border border-stone-100 hover:bg-[#0070BA] hover:text-white rounded-xl flex items-center justify-center font-bold text-stone-600 transition-all shadow-xs"
+                                title="Diminuir"
+                              >
+                                -
+                              </button>
+                              
+                              <input 
+                                type="range" 
+                                min="0.3" 
+                                max="2.0" 
+                                step="0.05"
+                                value={config?.siteConfig?.logoScale || 1}
+                                onChange={e => {
+                                  const val = parseFloat(e.target.value);
+                                  setConfig(prev => prev ? ({ ...prev, siteConfig: { ...prev.siteConfig!, logoScale: val } }) : null);
+                                }}
+                                className="flex-1 accent-[#0070BA] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => setConfig(prev => {
+                                  if (!prev) return null;
+                                  const currentScale = prev.siteConfig?.logoScale || 1;
+                                  return { ...prev, siteConfig: { ...prev.siteConfig!, logoScale: Math.min(2.0, currentScale + 0.05) } };
+                                })}
+                                className="w-9 h-9 bg-white border border-stone-100 hover:bg-[#0070BA] hover:text-white rounded-xl flex items-center justify-center font-bold text-stone-600 transition-all shadow-xs"
+                                title="Aumentar"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="text-[11px] font-black text-stone-400 uppercase tracking-tighter pl-1">Escala do Logotipo (Desktop)</label>
-                    <div className="flex items-center gap-4 bg-stone-50 rounded-2xl px-6 py-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setConfig(prev => {
-                          if (!prev) return null;
-                          const currentScale = prev.siteConfig?.logoScale || 1;
-                          return { ...prev, siteConfig: { ...prev.siteConfig!, logoScale: Math.max(0.5, currentScale - 0.05) } };
-                        })}
-                        className="w-10 h-10 bg-white border border-stone-100 rounded-xl flex items-center justify-center font-bold text-stone-600 hover:bg-[#0070BA] hover:text-white transition-all shadow-sm"
-                        title="Diminuir"
-                      >
-                        -
-                      </button>
-                      <div className="flex-1 text-center">
-                        <span className="text-sm font-black text-stone-900">
-                          {Math.round((config?.siteConfig?.logoScale || 1) * 100)}%
-                        </span>
-                        <p className="text-[9px] text-stone-400 font-bold uppercase">Tamanho</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setConfig(prev => {
-                          if (!prev) return null;
-                          const currentScale = prev.siteConfig?.logoScale || 1;
-                          return { ...prev, siteConfig: { ...prev.siteConfig!, logoScale: Math.min(2, currentScale + 0.05) } };
-                        })}
-                        className="w-10 h-10 bg-white border border-stone-100 rounded-xl flex items-center justify-center font-bold text-stone-600 hover:bg-[#0070BA] hover:text-white transition-all shadow-sm"
-                        title="Aumentar"
-                      >
-                        +
-                      </button>
                     </div>
                   </div>
                   <div className="md:col-span-2 space-y-4 border-t border-stone-50 pt-8">

@@ -132,9 +132,16 @@ function AppContent() {
 
     const unsubscribeConfig = agentService.subscribeToAppConfig(cfg => {
       if (cfg) {
-        setAppConfig(cfg as AppConfig);
-        if (cfg.siteConfig?.siteName) {
-          document.title = cfg.siteConfig.siteName;
+        const updatedCfg = { ...cfg } as AppConfig;
+        if (updatedCfg.siteConfig) {
+          const name = updatedCfg.siteConfig.siteName || '';
+          if (!name || name.includes('Breves') || name === 'Mapa Cultural') {
+            updatedCfg.siteConfig.siteName = 'Mapa Cultural (Padrão)';
+          }
+        }
+        setAppConfig(updatedCfg);
+        if (updatedCfg.siteConfig?.siteName) {
+          document.title = updatedCfg.siteConfig.siteName;
         }
       }
     });
@@ -243,8 +250,8 @@ function AppContent() {
           spacesCount: spaces.length,
           projectsCount: projects.length
         }));
-      } catch (e) {
-        console.error("Error fetching stats:", e);
+      } catch (e: any) {
+        console.warn("Error fetching stats (possible quota/offline):", e.message || e);
       }
     };
     fetchCounts();

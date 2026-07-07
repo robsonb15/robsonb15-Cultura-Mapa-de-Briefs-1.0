@@ -157,35 +157,35 @@ const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ onGoToMapping, onAg
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setAgentsList(data);
     }, (error) => {
-      console.error("Error subscribing to agents live feed:", error);
+      console.warn("Error subscribing to agents live feed:", error);
     });
 
     const unsubEvents = onSnapshot(collection(db, 'events'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setEventsList(data);
     }, (error) => {
-      console.error("Error subscribing to events live feed:", error);
+      console.warn("Error subscribing to events live feed:", error);
     });
 
     const unsubSpaces = onSnapshot(collection(db, 'spaces'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setSpacesList(data);
     }, (error) => {
-      console.error("Error subscribing to spaces live feed:", error);
+      console.warn("Error subscribing to spaces live feed:", error);
     });
 
     const unsubProjects = onSnapshot(collection(db, 'projects'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setProjectsList(data);
     }, (error) => {
-      console.error("Error subscribing to projects live feed:", error);
+      console.warn("Error subscribing to projects live feed:", error);
     });
 
     const unsubOpportunities = onSnapshot(collection(db, 'opportunities'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setOpportunitiesList(data);
     }, (error) => {
-      console.error("Error subscribing to opportunities live feed:", error);
+      console.warn("Error subscribing to opportunities live feed:", error);
     });
 
     const unsubConfig = onSnapshot(doc(db, 'config', 'app'), (snap) => {
@@ -193,7 +193,7 @@ const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ onGoToMapping, onAg
         setConfig(snap.data().siteConfig);
       }
     }, (error) => {
-      console.error("Error subscribing to config live feed:", error);
+      console.warn("Error subscribing to config live feed:", error);
     });
 
     return () => {

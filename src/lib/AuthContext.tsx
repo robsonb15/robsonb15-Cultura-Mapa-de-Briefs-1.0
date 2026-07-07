@@ -37,11 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const docRef = doc(db, 'users', uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setProfile(docSnap.data() as UserProfile);
+        const data = docSnap.data() as UserProfile;
+        setProfile(data);
+        localStorage.setItem(`cached_user_profile_${uid}`, JSON.stringify(data));
       } else {
         setProfile(null);
       }
-    } catch (error) {
+    } catch (error: any) {
+      const cached = localStorage.getItem(`cached_user_profile_${uid}`);
+      if (cached) {
+        try {
+          setProfile(JSON.parse(cached));
+          console.warn("Using cached user profile due to database status:", uid);
+          return;
+        } catch (e) {}
+      }
+      console.warn("Could not fetch profile from Firestore (possible cota/quota limits exceeded):", error.message || error);
       handleFirestoreError(error, OperationType.GET, `users/${uid}`);
     }
   };
@@ -74,11 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             await setDoc(docRef, newProfile);
             setProfile(newProfile as any);
+            localStorage.setItem(`cached_user_profile_${currentUser.uid}`, JSON.stringify(newProfile));
           } else {
-            setProfile(docSnap.data() as UserProfile);
+            const data = docSnap.data() as UserProfile;
+            setProfile(data);
+            localStorage.setItem(`cached_user_profile_${currentUser.uid}`, JSON.stringify(data));
           }
-        } catch (error) {
-          console.error("Error with state change profile check:", error);
+        } catch (error: any) {
+          console.warn("Warning with state change profile check:", error.message || error);
           await fetchProfile(currentUser.uid);
         }
       } else {
