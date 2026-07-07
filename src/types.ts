@@ -356,4 +356,5 @@ export interface OpportunityRegistration {
   maxPossibleScore?: number;
   createdAt: any;
   updatedAt: any;
+  adminAuthorized?: boolean;
 }

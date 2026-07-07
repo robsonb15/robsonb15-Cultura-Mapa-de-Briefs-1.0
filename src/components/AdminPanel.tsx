@@ -16,6 +16,7 @@ import {
   Map, 
   Image as ImageIcon, 
   Shield, 
+  ShieldCheck,
   Save, 
   AlertCircle, 
   CheckCircle2, 
@@ -1803,8 +1804,14 @@ export default function AdminPanel() {
                                     reg.status === 'submitted' ? 'bg-blue-50 text-blue-600' : 
                                     reg.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'
                                   }`}>
-                                    Status: {reg.status === 'submitted' ? 'Recebido' : reg.status === 'approved' ? 'Aprovado' : reg.status}
+                                    Status: {reg.status === 'submitted' ? 'Recebido' : reg.status === 'approved' ? 'Aprovado' : reg.status === 'draft' ? 'Rascunho' : reg.status}
                                   </span>
+                                  {reg.adminAuthorized && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-600 uppercase tracking-tight ml-2">
+                                      Autorizado Fora do Prazo
+                                    </span>
+                                  )}
+
                                </div>
                                <div>
                                  <h4 className="text-lg font-black text-stone-900 uppercase tracking-tighter italic">
@@ -1846,6 +1853,26 @@ export default function AdminPanel() {
                                  />
                                )}
                                 <button 
+                                 onClick={async () => {
+                                   const newAuth = !reg.adminAuthorized;
+                                   try {
+                                     await updateDoc(doc(db, 'opportunity_registrations', reg.id), { adminAuthorized: newAuth, updatedAt: serverTimestamp() });
+                                     setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, adminAuthorized: newAuth } : r));
+                                     alert(newAuth ? 'Inscrição autorizada para envio fora do prazo!' : 'Autorização de envio fora do prazo revogada!');
+                                   } catch (e) {
+                                     alert('Erro ao atualizar autorização.');
+                                   }
+                                 }}
+                                 className={`p-4 rounded-2xl transition-all border ${
+                                   reg.adminAuthorized 
+                                     ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' 
+                                     : 'bg-stone-50 text-stone-600 border-stone-100 hover:bg-stone-900 hover:text-white'
+                                 }`}
+                                 title={reg.adminAuthorized ? "Revogar Autorização Fora do Prazo" : "Autorizar Envio Fora do Prazo"}
+                               >
+                                  <ShieldCheck size={20} />
+                               </button>
+                               <button 
                                  onClick={() => setEvaluatingRegistration(reg)}
                                  className="p-4 bg-stone-50 text-stone-600 rounded-2xl hover:bg-stone-900 hover:text-white transition-all border border-stone-100"
                                  title="Avaliar Inscrição"

@@ -126,6 +126,74 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
 
   const [formData, setFormData] = useState<RegistrationData>(initialData);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  const isOpportunityOpen = (item: any): boolean => {
+    if (!item) return false;
+    const now = new Date();
+
+    if (item.timelinePhases && item.timelinePhases.length > 0) {
+      const inscriptionPhases = item.timelinePhases.filter((p: any) => 
+        p.name && (p.name.toLowerCase().includes('inscri') || p.name.toLowerCase().includes('aberta'))
+      );
+
+      if (inscriptionPhases.length > 0) {
+        return inscriptionPhases.some((p: any) => {
+          const start = p.startDate ? new Date(p.startDate) : null;
+          const end = p.endDate ? new Date(p.endDate) : null;
+
+          const isStartValid = start && !isNaN(start.getTime());
+          const isEndValid = end && !isNaN(end.getTime());
+
+          if (isStartValid && isEndValid) {
+            return now >= start && now <= end;
+          } else if (isStartValid) {
+            return now >= start;
+          } else if (isEndValid) {
+            return now <= end;
+          }
+          return false;
+        });
+      }
+    }
+
+    const start = item.startDate ? new Date(item.startDate) : null;
+    const deadline = item.deadline ? new Date(item.deadline) : null;
+
+    const isStartValid = start && !isNaN(start.getTime());
+    const isDeadlineValid = deadline && !isNaN(deadline.getTime());
+
+    if (isStartValid && isDeadlineValid) {
+      return now >= start && now <= deadline;
+    } else if (isStartValid) {
+      return now >= start;
+    } else if (isDeadlineValid) {
+      return now <= deadline;
+    }
+
+    return item.status === 'open';
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSave({
+        id: registration?.id,
+        opportunityId: opportunity.id,
+        proponentType,
+        status: 'draft',
+        adminAuthorized: registration?.adminAuthorized || false,
+        data: formData as any,
+      });
+      localStorage.removeItem(`draft_reg_${opportunity.id}`);
+      alert('Rascunho de inscrição salvo com sucesso!');
+      onBack();
+    } catch (error) {
+      console.error("Error saving draft", error);
+      alert('Erro ao salvar rascunho de inscrição.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
@@ -317,12 +385,21 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
       return;
     }
 
+    // Deadline check!
+    const isOpen = isOpportunityOpen(opportunity);
+    if (!isOpen && !registration?.adminAuthorized) {
+      alert('Prazo de inscrições encerrado! Você não pode enviar esta inscrição a menos que um administrador autorize.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSave({
+        id: registration?.id, // Ensure we update the existing draft if we have one!
         opportunityId: opportunity.id,
         proponentType,
         status: 'submitted',
+        adminAuthorized: registration?.adminAuthorized || false,
         data: formData as any,
       });
       // Clear draft after successful submission
@@ -953,7 +1030,14 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
              {currentStep === 1 ? 'Sair do Formulário' : 'Anterior'}
            </button>
 
-           <div className="flex gap-4 w-full md:w-auto">
+           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+             <button 
+               onClick={handleSaveDraft}
+               disabled={isSubmitting}
+               className="w-full md:w-auto bg-stone-100 hover:bg-stone-200 text-stone-900 px-8 py-6 rounded-xl font-black text-[13px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-stone-200 shadow-sm"
+             >
+               Salvar Rascunho
+             </button>
               {currentStep < 7 ? (
                 <button 
                   onClick={nextStep}

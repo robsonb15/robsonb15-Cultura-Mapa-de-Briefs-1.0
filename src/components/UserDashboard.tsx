@@ -124,6 +124,7 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
   const [viewingRegistrations, setViewingRegistrations] = useState<string | null>(null); // Opportunity ID
   const [trackingRegistration, setTrackingRegistration] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState<string | null>(null); // Registration ID
+  const [regSubtab, setRegSubtab] = useState<string>('não_enviadas');
   const pdfRef = useRef<HTMLDivElement>(null);
   const contentAreaRef = useRef<HTMLElement>(null);
 
@@ -1073,6 +1074,34 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
       }
 
       case 'my_opportunities': {
+        const countDrafts = registrations.filter(reg => {
+          const opp = opportunities.find(o => o.id === reg.opportunityId);
+          const isClosed = opp ? !isOpportunityOpen(opp) : false;
+          return reg.status === 'draft' && (!isClosed || !reg.adminAuthorized);
+        }).length;
+
+        const countSubmitted = registrations.filter(reg => reg.status !== 'draft').length;
+
+        const countPermitted = registrations.filter(reg => {
+          const opp = opportunities.find(o => o.id === reg.opportunityId);
+          const isClosed = opp ? !isOpportunityOpen(opp) : false;
+          return reg.status === 'draft' && isClosed && reg.adminAuthorized;
+        }).length;
+
+        const currentFilteredRegistrations = registrations.filter(reg => {
+          const opp = opportunities.find(o => o.id === reg.opportunityId);
+          const isClosed = opp ? !isOpportunityOpen(opp) : false;
+
+          if (regSubtab === 'não_enviadas') {
+            return reg.status === 'draft' && (!isClosed || !reg.adminAuthorized);
+          } else if (regSubtab === 'enviadas') {
+            return reg.status !== 'draft';
+          } else if (regSubtab === 'com_permissao') {
+            return reg.status === 'draft' && isClosed && reg.adminAuthorized;
+          }
+          return true;
+        });
+
         return (
           <div className="space-y-8">
             {/* Minhas Inscrições em Outras Oportunidades */}
@@ -1091,70 +1120,150 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
                   </button>
                </div>
 
-               <div className="grid grid-cols-1 gap-6">
-                 {registrations.length > 0 ? (
-                   registrations.map((reg) => (
-                     <div key={reg.id} className="bg-stone-50 rounded-3xl p-6 border border-stone-100 group">
-                        <div className="flex flex-col md:flex-row justify-between gap-6">
-                           <div>
-                              <div className="flex items-center gap-3 mb-2">
-                                 <span className="text-[10px] font-black text-red-500 font-mono">{reg.registrationNumber}</span>
-                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${
-                                   reg.status === 'submitted' ? 'bg-blue-100 text-blue-700' : 
-                                   reg.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600'
-                                 }`}>
-                                   {reg.status === 'submitted' ? 'Enviada' : reg.status === 'approved' ? 'Aprovada' : 'Rascunho'}
-                                 </span>
-                              </div>
-                              <h4 className="text-lg font-black text-stone-900 uppercase tracking-tighter">
-                                {reg.data?.identification?.projectName || 'Inscrição Sem Título'}
-                              </h4>
-                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-tighter mt-1">
-                                {new Date(reg.updatedAt?.seconds * 1000).toLocaleDateString('pt-BR')}
-                              </p>
-                           </div>
-                           <div className="flex items-center gap-3">
-                              <button 
-                                onClick={() => {
-                                  generatePDF(reg);
-                                }}
-                                disabled={isGenerating === reg.id}
-                                className="px-6 py-3 bg-[#141414] text-white rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
-                              >
-                                <Printer size={14} className={isGenerating === reg.id ? 'animate-bounce' : ''} />
-                                {isGenerating === reg.id ? 'Gerando...' : 'Imprimir'}
-                              </button>
+               {/* Custom Subtabs for Inscriptions */}
+               <div className="flex border-b border-stone-100 mb-8 overflow-x-auto gap-8">
+                  {[
+                    { id: 'não_enviadas', label: 'Não enviadas', count: countDrafts, showDot: countDrafts > 0 },
+                    { id: 'enviadas', label: 'Enviadas', count: countSubmitted, showDot: false },
+                    { id: 'com_permissao', label: 'Com permissão', count: countPermitted, showDot: false }
+                  ].map((subtab) => (
+                    <button
+                      key={subtab.id}
+                      onClick={() => setRegSubtab(subtab.id)}
+                      className={`pb-4 px-1 text-sm font-black uppercase tracking-tight relative flex items-center gap-2 whitespace-nowrap transition-all ${
+                        regSubtab === subtab.id 
+                          ? 'text-[#0070BA] border-b-2 border-[#0070BA]' 
+                          : 'text-stone-400 hover:text-stone-600'
+                      }`}
+                    >
+                      {subtab.label}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${regSubtab === subtab.id ? 'bg-[#0070BA] text-white' : 'bg-stone-50 text-stone-400 border border-stone-100'}`}>
+                        {subtab.count}
+                      </span>
+                      {subtab.showDot && (
+                        <span className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse absolute -top-1 -right-2" />
+                      )}
+                    </button>
+                  ))}
+               </div>
 
-                              {/* Hidden PDF component for generation */}
-                              {isGenerating === reg.id && (
-                                <RegistrationSummaryPDF 
-                                  ref={pdfRef}
-                                  registration={reg}
-                                  opportunity={opportunities.find(o => o.id === reg.opportunityId) || { name: reg.data?.opportunityName || 'Edital' } as any}
-                                  agent={myAgent || agents.find(a => a.id === reg.userId)!}
-                                />
-                              )}
-                              <button 
-                                onClick={() => setTrackingRegistration(reg)}
-                                className="px-6 py-3 bg-[#0070BA] text-white rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2"
-                              >
-                                Acompanhar
-                                <ChevronRight size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteRegistration(reg.id)}
-                                className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm flex items-center justify-center"
-                                title="Excluir Inscrição"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+               <div className="grid grid-cols-1 gap-6">
+                 {currentFilteredRegistrations.length > 0 ? (
+                   currentFilteredRegistrations.map((reg) => {
+                     const opp = opportunities.find(o => o.id === reg.opportunityId);
+                     const isClosed = opp ? !isOpportunityOpen(opp) : false;
+
+                     if (regSubtab === 'não_enviadas' || regSubtab === 'com_permissao') {
+                       return (
+                         <div key={reg.id} className="bg-stone-50 rounded-3xl p-8 border border-stone-100 flex flex-col md:flex-row justify-between gap-6 items-start md:items-center">
+                           <div className="space-y-3 flex-1">
+                             <h4 className="text-stone-900 font-black text-lg uppercase tracking-tight leading-tight">
+                               {opp?.name || reg.data?.opportunityName || 'Edital não encontrado'}
+                             </h4>
+                             <div className="flex flex-col gap-1.5 text-xs font-semibold text-stone-500">
+                               <div><span className="text-stone-400 font-bold uppercase">INSCRIÇÃO:</span> <span className="font-mono text-red-600 font-bold">{reg.registrationNumber}</span></div>
+                               <div><span className="text-stone-400 font-bold uppercase">DATA DE INSCRIÇÃO:</span> {reg.updatedAt ? new Date(reg.updatedAt.seconds * 1000).toLocaleString('pt-BR') : new Date().toLocaleDateString('pt-BR')}</div>
+                               <div><span className="text-stone-400 font-bold uppercase">AGENTE INSCRITO:</span> <span className="uppercase font-bold">{reg.agentName || myAgent?.name || 'Agente'}</span></div>
+                               <div><span className="text-stone-400 font-bold uppercase">PROPONENTE:</span> <span className="uppercase font-bold">{reg.proponentType}</span></div>
+                               {isClosed && (
+                                 <div className="mt-1">
+                                   {reg.adminAuthorized ? (
+                                     <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-black uppercase">Autorizado pelo Administrador</span>
+                                   ) : (
+                                     <span className="bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">Inscrições Encerradas</span>
+                                   )}
+                                 </div>
+                               )}
+                             </div>
                            </div>
-                        </div>
-                     </div>
-                   ))
+
+                           <div className="flex items-center gap-6 w-full md:w-auto justify-end">
+                             <button 
+                               onClick={() => handleDeleteRegistration(reg.id)}
+                               className="text-red-600 hover:text-red-800 font-black text-xs uppercase tracking-wider transition-colors"
+                             >
+                               Excluir
+                             </button>
+                             <button 
+                               onClick={() => {
+                                 if (opp) {
+                                   setSelectedContent({ ...opp, registration: reg });
+                                   setView('opportunity_registration' as any);
+                                 }
+                               }}
+                               className="px-6 py-4 bg-[#0070BA] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2"
+                             >
+                               Continuar &gt;
+                             </button>
+                           </div>
+                         </div>
+                       );
+                     }
+
+                     // 'enviadas' tab layout
+                     return (
+                       <div key={reg.id} className="bg-stone-50 rounded-3xl p-6 border border-stone-100 group">
+                          <div className="flex flex-col md:flex-row justify-between gap-6">
+                             <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                   <span className="text-[10px] font-black text-red-500 font-mono">{reg.registrationNumber}</span>
+                                   <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${
+                                     reg.status === 'submitted' ? 'bg-blue-100 text-blue-700' : 
+                                     reg.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600'
+                                   }`}>
+                                     {reg.status === 'submitted' ? 'Enviada' : reg.status === 'approved' ? 'Aprovada' : 'Rascunho'}
+                                   </span>
+                                </div>
+                                <h4 className="text-lg font-black text-stone-900 uppercase tracking-tighter">
+                                  {opp?.name || reg.data?.identification?.projectName || 'Inscrição Sem Título'}
+                                </h4>
+                                <p className="text-[10px] font-black text-stone-400 uppercase tracking-tighter mt-1">
+                                  {reg.updatedAt ? new Date(reg.updatedAt.seconds * 1000).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}
+                                </p>
+                             </div>
+                             <div className="flex items-center gap-3">
+                                <button 
+                                  onClick={() => {
+                                    generatePDF(reg);
+                                  }}
+                                  disabled={isGenerating === reg.id}
+                                  className="px-6 py-3 bg-[#141414] text-white rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                                >
+                                  <Printer size={14} className={isGenerating === reg.id ? 'animate-bounce' : ''} />
+                                  {isGenerating === reg.id ? 'Gerando...' : 'Imprimir'}
+                                </button>
+
+                                {/* Hidden PDF component for generation */}
+                                {isGenerating === reg.id && (
+                                  <RegistrationSummaryPDF 
+                                    ref={pdfRef}
+                                    registration={reg}
+                                    opportunity={opp || { name: reg.data?.opportunityName || 'Edital' } as any}
+                                    agent={myAgent || agents.find(a => a.id === reg.userId)!}
+                                  />
+                                )}
+                                <button 
+                                  onClick={() => setTrackingRegistration(reg)}
+                                  className="px-6 py-3 bg-[#0070BA] text-white rounded-xl text-[10px] font-black uppercase tracking-tighter shadow-sm hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                                >
+                                  Acompanhar
+                                  <ChevronRight size={14} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteRegistration(reg.id)}
+                                  className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm flex items-center justify-center"
+                                  title="Excluir Inscrição"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                             </div>
+                          </div>
+                       </div>
+                     );
+                   })
                  ) : (
                    <div className="bg-stone-50 rounded-3xl border border-dashed border-stone-200 py-16 text-center">
-                     <p className="text-stone-400 font-black text-[10px] uppercase tracking-[0.2em]">Você ainda não realizou nenhuma inscrição.</p>
+                     <p className="text-stone-400 font-black text-[10px] uppercase tracking-[0.2em]">Você ainda não possui inscrições nesta aba.</p>
                    </div>
                  )}
                </div>
