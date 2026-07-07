@@ -116,6 +116,15 @@ export default function AdminPanel() {
   const [evaluatingRegistration, setEvaluatingRegistration] = useState<OpportunityRegistration | null>(null);
   const [phasesList, setPhasesList] = useState<any[]>([]);
   const [selectedPhaseIndex, setSelectedPhaseIndex] = useState<number>(0);
+  const contentAreaRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        contentAreaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [activeTab, editingAgent, editingOpportunity, evaluatingRegistration]);
 
   useEffect(() => {
     if (evaluatingRegistration) {
@@ -748,7 +757,7 @@ export default function AdminPanel() {
           </aside>
 
           {/* Content Area */}
-          <main className="flex-1">
+          <main className="flex-1" ref={contentAreaRef}>
             {status && (
               <motion.div 
                 initial={{ opacity: 0, y: -20 }}

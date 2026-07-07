@@ -611,28 +611,7 @@ export default function ContentDetail({ content, type, onBack, onEdit, onDelete,
 
           {/* Right Sidebar */}
           <div className="lg:col-span-4 space-y-12">
-             {/* Timeline Sidebar Vertical */}
-             {(content.startDate || content.deadline) && (
-               <div className="relative pl-8 space-y-10">
-                  <div className="absolute left-[3px] top-2 bottom-2 w-0.5 bg-stone-100" />
-                  
-                  {content.startDate && (
-                    <div className="relative">
-                       <div className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white shadow-lg shadow-emerald-200" />
-                       <p className="text-[11px] font-black text-stone-900 uppercase tracking-tighter mb-1">Início</p>
-                       <p className="text-[11px] text-stone-400 font-black uppercase tracking-tight">{formatDate(content.startDate)}</p>
-                    </div>
-                  )}
 
-                  {content.deadline && (
-                    <div className="relative">
-                       <div className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-stone-200 border-4 border-white shadow-md shadow-stone-100" />
-                       <p className="text-[11px] font-black text-stone-900 uppercase tracking-tighter leading-none mb-1">Prazo Final</p>
-                       <p className="text-[11px] text-stone-400 font-black">{formatDateTime(content.deadline)}</p>
-                    </div>
-                  )}
-               </div>
-             )}
 
              {/* Interest Areas Tags */}
              <div>

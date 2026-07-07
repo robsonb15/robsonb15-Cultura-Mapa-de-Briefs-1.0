@@ -125,6 +125,15 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
   const [trackingRegistration, setTrackingRegistration] = useState<any | null>(null);
   const [isGenerating, setIsGenerating] = useState<string | null>(null); // Registration ID
   const pdfRef = useRef<HTMLDivElement>(null);
+  const contentAreaRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        contentAreaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [activeTab, editingContent, viewingRegistrations, trackingRegistration]);
 
   const effectiveProfile = profile || {
     uid: user?.uid || '',
@@ -1219,7 +1228,7 @@ export default function UserDashboard({ setView, setSelectedContent, hasAgent, i
       </aside>
 
       {/* Content Area */}
-      <main className="flex-1 p-6 md:p-12 overflow-y-auto bg-[#F8F9FA] pt-24 md:pt-32">
+      <main className="flex-1 p-6 md:p-12 overflow-y-auto bg-[#F8F9FA] pt-24 md:pt-32" ref={contentAreaRef}>
         <div className="max-w-5xl mx-auto">
           <header className="mb-12">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter text-stone-400 mb-2 pl-32 md:pl-48 lg:pl-0">
