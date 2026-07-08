@@ -284,7 +284,7 @@ export default function AdminPanel() {
         const data = configDoc.data() as AppConfig;
         if (!data.siteConfig) {
           data.siteConfig = {
-            siteName: 'Mapa Cultural (Padrão)',
+            siteName: 'Plataforma digital base conceitual Mapa Cultural',
             logoUrl: data.logoUrl || '',
             heroTitle: 'Boas-vindas ao Mapa Cultural',
             heroSubtitle: 'O Mapa Cultural é uma ferramenta de gestão cultural que garante a estruturação de Sistemas de Informações e Indicadores.',
@@ -324,8 +324,8 @@ export default function AdminPanel() {
           data.siteConfig.footer.addressText = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
           data.siteConfig.footer.address = 'Secretaria de Cultura, Turismo e Eventos, Breves - PA, 68800-000';
         }
-        if (data.siteConfig && (!data.siteConfig.siteName || data.siteConfig.siteName.includes('Breves') || data.siteConfig.siteName === 'Mapa Cultural')) {
-          data.siteConfig.siteName = 'Mapa Cultural (Padrão)';
+        if (data.siteConfig && (!data.siteConfig.siteName || data.siteConfig.siteName.includes('Breves') || data.siteConfig.siteName === 'Mapa Cultural' || data.siteConfig.siteName === 'Mapa Cultural (Padrão)')) {
+          data.siteConfig.siteName = 'Plataforma digital base conceitual Mapa Cultural';
         }
         if (data.siteConfig && data.siteConfig.logoScale === undefined) {
           data.siteConfig.logoScale = 1;
@@ -425,7 +425,7 @@ export default function AdminPanel() {
           logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
           adminEmails: ['robsonstudio15hd@gmail.com', 'portalseculte@gmail.com'],
           siteConfig: {
-            siteName: 'Mapa Cultural (Padrão)',
+            siteName: 'Plataforma digital base conceitual Mapa Cultural',
             logoUrl: 'https://i.postimg.cc/L6F2L3yw/logo-breves.png',
             heroBannerImage: 'https://i.postimg.cc/ZKnRFWzb/Orla-Breves-ok.jpg',
             featuredTitle: 'Em destaque',

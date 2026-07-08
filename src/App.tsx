@@ -168,8 +168,8 @@ function AppContent() {
         const updatedCfg = { ...cfg } as AppConfig;
         if (updatedCfg.siteConfig) {
           const name = updatedCfg.siteConfig.siteName || '';
-          if (!name || name.includes('Breves') || name === 'Mapa Cultural') {
-            updatedCfg.siteConfig.siteName = 'Mapa Cultural (Padrão)';
+          if (!name || name.includes('Breves') || name === 'Mapa Cultural' || name === 'Mapa Cultural (Padrão)') {
+            updatedCfg.siteConfig.siteName = 'Plataforma digital base conceitual Mapa Cultural';
           }
         }
         setAppConfig(updatedCfg);
