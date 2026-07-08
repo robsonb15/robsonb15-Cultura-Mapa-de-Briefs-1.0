@@ -520,6 +520,7 @@ function AppContent() {
       case 'opportunity_registration':
         return selectedContent && myAgent ? (
           <OpportunityRegistrationFlow 
+            key={`${myAgent.id}_${selectedContent.id}_${selectedContent.registration?.id || 'new'}`}
             opportunity={selectedContent}
             registration={selectedContent.registration}
             agent={myAgent}

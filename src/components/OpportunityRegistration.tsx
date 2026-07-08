@@ -185,6 +185,7 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
         data: formData as any,
       });
       localStorage.removeItem(`draft_reg_${opportunity.id}`);
+      localStorage.removeItem(`draft_reg_${agent.id}_${opportunity.id}`);
       alert('Rascunho de inscrição salvo com sucesso!');
       onBack();
     } catch (error) {
@@ -230,33 +231,6 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
       }));
     }
   }, [agent]);
-
-  // Load from localStorage on mount if not editing existing registration
-  useEffect(() => {
-    if (!registration) {
-      const saved = localStorage.getItem(`draft_reg_${opportunity.id}`);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          setFormData(parsed.formData);
-          setProponentType(parsed.proponentType);
-          setShowSelection(false);
-        } catch (e) {
-          console.error("Error loading draft", e);
-        }
-      }
-    }
-  }, [opportunity.id, registration]);
-
-  // Save to localStorage every time formData changes
-  useEffect(() => {
-    if (!registration && !showSelection) {
-      localStorage.setItem(`draft_reg_${opportunity.id}`, JSON.stringify({
-        formData,
-        proponentType
-      }));
-    }
-  }, [formData, proponentType, opportunity.id, registration, showSelection]);
 
   const [newGoal, setNewGoal] = useState({ description: '', delivery: '' });
 
@@ -404,6 +378,7 @@ export default function OpportunityRegistrationFlow({ opportunity, agent, regist
       });
       // Clear draft after successful submission
       localStorage.removeItem(`draft_reg_${opportunity.id}`);
+      localStorage.removeItem(`draft_reg_${agent.id}_${opportunity.id}`);
       alert('Inscrição realizada com sucesso!');
       onBack();
     } catch (error) {
