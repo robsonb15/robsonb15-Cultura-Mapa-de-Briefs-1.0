@@ -1,14 +1,18 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore, CACHE_SIZE_UNLIMITED, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, CACHE_SIZE_UNLIMITED, doc, getDocFromServer, setLogLevel } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
+
+// Silence verbose firebase connection warnings/info in the console
+setLogLevel('error');
 
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore with settings that might help in restricted network environments
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false,
   cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 }, firebaseConfig.firestoreDatabaseId);
 
